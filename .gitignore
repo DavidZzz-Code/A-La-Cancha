@@ -1,0 +1,29 @@
+# Dependencias y compilaciones
+node_modules/
+.expo/
+.next/
+.turbo/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Configuración local y credenciales
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.p12
+*.p8
+*.jks
+*.keystore
+google-services.json
+GoogleService-Info.plist
+credentials.json
+
+# Herramientas y sistema
+.DS_Store
+Thumbs.db
+*.log
+supabase/.temp/

@@ -1,0 +1,24 @@
+name: Investigación o decisión
+description: Validar una hipótesis antes de implementar o gastar.
+title: "[Investigación] "
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Pregunta que debemos resolver
+    validations:
+      required: true
+  - type: textarea
+    id: method
+    attributes:
+      label: Método, alcance y límite de gasto
+      description: Explica qué evidencia buscamos y cómo la obtendremos.
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Criterio para tomar la decisión
+      description: Define cuándo continuar, ajustar o descartar la hipótesis.
+    validations:
+      required: true

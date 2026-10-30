@@ -1,0 +1,28 @@
+name: Error
+description: Reportar un comportamiento incorrecto y cómo reproducirlo.
+title: "[Error] "
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducir
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Resultado actual y esperado
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Entorno
+      description: Versión de la app, dispositivo y sistema o navegador. No incluir datos privados.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impacto y evidencia
+      description: Indica si afecta reservas, pagos o acceso; adjunta capturas sin información personal.

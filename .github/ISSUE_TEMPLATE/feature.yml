@@ -1,0 +1,44 @@
+name: Funcionalidad
+description: Proponer una mejora con alcance y criterios verificables.
+title: "[Función] "
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      options:
+        - App móvil
+        - Panel de propietarios
+        - Web pública
+        - Reservas y datos
+        - Diseño
+        - Operación
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema y usuario
+      description: Describe quién lo necesita y qué no puede resolver hoy.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Alcance
+      description: Incluye qué entrega y qué queda fuera.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Criterios de aceptación
+      description: Resultados observables para cerrar esta tarea.
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencias y documentos
+      description: Enlaza issues, decisiones, diseños o evidencia existentes.
