@@ -1,9 +1,7 @@
 # Dominio compartido
 
-Estado: contratos y código pendientes del diseño de datos.
+Paquete TypeScript independiente de React y servicios. src/index.ts contiene contratos, intervalos en America/Bogota, disponibilidad, cotización demo, filtros y reparto orientativo entre jugadores. test/ verifica reglas y bordes con Node 24.
 
-Colocar aquí tipos y reglas puras que necesitan varias aplicaciones: moneda e importes, estados de reserva, intervalos y contratos de entrada/salida.
+La aplicación usa estas reglas para la demostración. Las garantías multiusuario pertenecen a PostgreSQL; no conectar este catálogo local como fuente de verdad de una agenda real. Las funciones de servidor calculan sus propios precios.
 
-Mantener el paquete independiente de React, Expo, Next.js y secretos. La validación compartida ayuda a la experiencia, pero las garantías de disponibilidad, precio y permisos se aplican de nuevo en el servidor.
-
-Crear un paquete instalable solo cuando exista código real para compartir. Ver [reglas](../../docs/product/reservation-rules.md).
+Ver [reglas de reserva](../../docs/product/reservation-rules.md) y [guía del prototipo](../../docs/engineering/prototype.md).
