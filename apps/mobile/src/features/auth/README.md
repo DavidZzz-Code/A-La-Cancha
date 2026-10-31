@@ -7,3 +7,5 @@ AuthProvider restaura sesión, escucha cambios y controla renovación al cambiar
 AccountPanel permite iniciar y cerrar sesión con cuentas de prueba existentes. No registra usuarios ni envía correos. Registro, recuperación, perfil y reservas remotas siguen pendientes en #6/#9. Restablecer demo borra solo los datos ficticios, no la sesión; para salir existe Cerrar sesión.
 
 Pendiente: validar sesión real, expiración, revocación, falta de conexión y tamaño de tokens en dispositivos Android/iOS. Las pruebas de configuración y exportaciones no sustituyen esas verificaciones. No usar este primer acceso de desarrollo como lanzamiento público.
+
+CI exporta además una variante con un dominio ficticio interceptado por Playwright. Comprueba credenciales rechazadas, sesión restaurada, cierre y error de red en dos tamaños de pantalla. Estas pruebas no envían solicitudes a Supabase real ni validan JWT reales.
