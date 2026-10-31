@@ -12,3 +12,6 @@ create function auth.uid() returns uuid language sql stable as $$
 $$;
 grant usage on schema auth,public to anon,authenticated;
 grant execute on function auth.uid() to anon,authenticated;
+
+-- Reproduce concesiones directas predeterminadas del proyecto Supabase.
+alter default privileges in schema public grant execute on functions to anon, authenticated;
