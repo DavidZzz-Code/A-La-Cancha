@@ -38,3 +38,40 @@ jobs:
             test-results/
             apps/mobile/dist/
           retention-days: 7
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: alacancha_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: disposable-test-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGDATABASE: alacancha_test
+      PGUSER: postgres
+      PGPASSWORD: disposable-test-only
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probar migración, permisos y concurrencia
+        run: python3 supabase/tests/test_agenda.py
+  required:
+    name: Required quality checks
+    if: always()
+    needs: [prototype, database]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exigir todas las comprobaciones
+        env:
+          PROTOTYPE_RESULT: ${{ needs.prototype.result }}
+          DATABASE_RESULT: ${{ needs.database.result }}
+        run: test "$PROTOTYPE_RESULT" = success && test "$DATABASE_RESULT" = success

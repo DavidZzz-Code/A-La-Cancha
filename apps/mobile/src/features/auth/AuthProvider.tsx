@@ -19,7 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (active && revision === initialRevision) setState({ session: error ? null : data.session, loading: false, error: error ? 'No pudimos restaurar tu sesión. Intenta iniciar sesión.' : null });
     }).catch(() => { if (active && revision === initialRevision) setState({ session: null, loading: false, error: 'No pudimos restaurar tu sesión.' }); });
     const refresh = (status: string) => { if (status === 'active') client.auth.startAutoRefresh(); else client.auth.stopAutoRefresh(); };
-    if (Platform.OS !== 'web') refresh(AppState.currentState);
+    if (Platform.OS !== 'web') refresh(AppState.currentState ?? "unknown");
     const listener = Platform.OS !== 'web' ? AppState.addEventListener('change', refresh) : null;
     return () => { active = false; subscription.unsubscribe(); listener?.remove(); if (Platform.OS !== 'web') client.auth.stopAutoRefresh(); };
   }, []);

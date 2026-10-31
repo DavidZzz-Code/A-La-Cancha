@@ -17,10 +17,13 @@
     "export:web": "npm run export:web -w @alacancha/mobile",
     "export:native": "npm run export:native -w @alacancha/mobile",
     "test:e2e": "playwright test",
-    "check": "npm run typecheck && npm test"
+    "check": "npm run lint && npm run typecheck && npm test",
+    "lint": "eslint apps/mobile packages scripts tests playwright.config.ts --max-warnings=0"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "^58.0.4",
     "typescript": "~6.0.3"
   }
 }
