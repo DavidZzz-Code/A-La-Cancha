@@ -1,0 +1,1 @@
+{"expo":{"name":"A La Cancha","slug":"a-la-cancha","version":"0.1.0","scheme":"alacancha","orientation":"portrait","userInterfaceStyle":"light","ios":{"bundleIdentifier":"com.alacancha.app","supportsTablet":true},"android":{"package":"com.alacancha.app"},"web":{"bundler":"metro","output":"single","name":"A La Cancha · Cartagena"},"plugins":["expo-router","expo-font"]}}
