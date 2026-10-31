@@ -50,4 +50,4 @@ La app Expo sigue usando un catálogo ficticio y persistencia local. Todavía fa
 
 Separar desarrollo, pruebas y producción al configurar servicios. Versionar migraciones y archivos `.env.example` sin secretos. No comprar ni publicar servicios como parte de esta fundación.
 
-El workspace Expo usa npm workspaces, Node 24 y lockfile versionado. CI comprueba tipos, reglas, exportaciones y recorridos web; otro workflow prueba PostgreSQL real. Ver [ejecución y evidencia](../engineering/prototype.md). Exportar bundles no equivale a probar o publicar apps nativas.
+El workspace Expo usa npm workspaces, Node 24 y lockfile versionado. CI comprueba tipos, reglas, exportaciones y recorridos web; el mismo workflow prueba PostgreSQL real. Ver [ejecución y evidencia](../engineering/prototype.md). Exportar bundles no equivale a probar o publicar apps nativas.
