@@ -13,7 +13,7 @@
     "start": "npm run start -w @alacancha/mobile",
     "web": "npm run web -w @alacancha/mobile",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "node --import ./scripts/test-aliases.mjs --test packages/domain/test/*.test.mjs apps/mobile/src/lib/*.test.mjs",
+    "test": "node --import ./scripts/test-aliases.mjs --test packages/domain/test/*.test.mjs apps/mobile/src/lib/*.test.mjs apps/mobile/src/features/auth/*.test.mjs",
     "export:web": "npm run export:web -w @alacancha/mobile",
     "export:native": "npm run export:native -w @alacancha/mobile",
     "test:e2e": "playwright test",
