@@ -6,7 +6,7 @@ El primer mercado es Cartagena, Colombia. La expansión a otras ciudades depende
 
 ## Estado actual
 
-Fundación de producto y organización del repositorio. Todavía no hay una aplicación ejecutable, cuentas de tiendas, integración de pagos ni establecimientos afiliados. Las metas del piloto son hipótesis de trabajo, no resultados obtenidos.
+Prototipo Expo en desarrollo: catálogo ficticio, búsqueda, favoritos, cotización y reservas locales de demostración. No hay pagos, agenda remota ni establecimientos afiliados. Ver [ejecución, pruebas y límites](docs/engineering/prototype.md).
 
 ## Empieza aquí
 

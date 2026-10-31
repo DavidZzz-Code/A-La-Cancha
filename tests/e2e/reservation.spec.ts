@@ -9,22 +9,21 @@ test('precio y hora estables, doble intento bloqueado, cancelación libera turno
   const errors:string[] = []; page.on('pageerror',error => errors.push(error.message));
   await page.goto('/');
   await expect(page.getByText('Menos chats.',{exact:false})).toBeVisible();
-  await expect(page.getByText('DEMOSTRACIÓN · Canchas ficticias.',{exact:false})).toBeVisible();
+  await expect(page.getByText('DEMOSTRACIÓN · Canchas ficticias.',{exact:false}).filter({visible:true})).toBeVisible();
   await page.screenshot({path:testInfo.outputPath('explore.png'),fullPage:true});
   // Turno tardío de hoy: en UTC ya es 4, pero debe seguir mostrándose el 3.
   const detail = '/court/el-patio?date=2026-11-03&time=22%3A00&duration=60';
   await page.goto(detail);
   await expect(page.getByTestId('court-total')).toContainText('120.000');
   await page.getByRole('button',{name:'Armar mi partido',exact:true}).click();
-  await expect(page.getByText('22:00',{exact:false})).toBeVisible();
+  await expect(page.getByText(/3.*nov.*22:00/).filter({visible:true})).toBeVisible();
   await page.getByRole('textbox',{name:'Nombre del equipo'}).fill('Los de Cartagena');
   await page.getByRole('checkbox',{name:'Entiendo que es una reserva de prueba'}).click();
   await page.getByRole('button',{name:'Crear reserva de prueba',exact:true}).click();
   await expect(page.getByText('Reserva de prueba guardada',{exact:true})).toBeVisible();
   await expect(page.getByTestId('confirmation-total')).toContainText('120.000');
-  await expect(page.getByText(/3.*nov.*22:00/)).toBeVisible();
-  await expect(page.getByText('22:00',{exact:false})).toBeVisible();
-  await expect(page.getByText('DEMOSTRACIÓN · Canchas ficticias.',{exact:false})).toBeVisible();
+  await expect(page.getByText(/3.*nov.*22:00/).filter({visible:true})).toBeVisible();
+  await expect(page.getByText('DEMOSTRACIÓN · Canchas ficticias.',{exact:false}).filter({visible:true})).toBeVisible();
   await page.screenshot({path:testInfo.outputPath('confirmation.png'),fullPage:true});
   // Espera la escritura observando persistencia tras recarga, sin retardos arbitrarios.
   await expect.poll(() => page.evaluate(() => localStorage.getItem('alacancha:demo:v1'))).toContain('Los de Cartagena');

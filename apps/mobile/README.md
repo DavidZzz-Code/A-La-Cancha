@@ -1,17 +1,9 @@
 # App de jugadores
 
-Estado: espacio reservado y documentado; Expo todavía no se ha inicializado.
+Prototipo Expo SDK 58, React Native y TypeScript. Catálogo ficticio y reservas locales.
 
-Stack decidido: React Native, Expo y TypeScript. Preparar Android e iOS; primera distribución prevista en Android.
+Desde la raíz: npm install y npm run web. Ver [ejecución, pruebas y límites](../../docs/engineering/prototype.md).
 
-## Organización al implementar
+Las rutas están en app/; las pantallas por funcionalidad en src/features/; componentes en src/components/ y persistencia local en src/lib/. Las reglas puras viven en packages/domain y los estilos base en packages/design-tokens.
 
-- `app/`: rutas y composición de pantallas.
-- `src/features/`: funcionalidades como discovery, venues y reservations.
-- `src/components/`: presentación compartida dentro de la app.
-- `src/lib/`: configuración y clientes de servicios.
-- `assets/`: iconos, imágenes autorizadas y fuentes necesarias.
-
-Crear las carpetas conforme tengan contenido. Las reglas y contratos compartidos corresponden a [domain](../../packages/domain/README.md); el estilo base a [design-tokens](../../packages/design-tokens/README.md).
-
-Ver [MVP](../../docs/product/mvp.md) y [arquitectura](../../docs/architecture/overview.md). Los comandos reproducibles, versiones compatibles, lockfile y chequeos se añadirán en el issue de inicialización de Expo.
+No hay autenticación ni agenda remota. Exportar JavaScript no sustituye probar dispositivos físicos.
