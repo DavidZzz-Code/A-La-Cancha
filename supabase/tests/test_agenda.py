@@ -46,8 +46,16 @@ class AgendaTests(unittest.TestCase):
     def setUpClass(cls):
         if os.environ.get('PGDATABASE') != 'alacancha_test':
             raise RuntimeError('PGDATABASE debe ser alacancha_test. No ejecutar sobre datos existentes.')
-        for path in [ROOT/'supabase/tests/bootstrap.sql', *sorted((ROOT/'supabase/migrations').glob('*.sql')), ROOT/'supabase/tests/seed.sql']:
+        migrations = sorted((ROOT/'supabase/migrations').glob('*.sql'))
+        for path in [ROOT/'supabase/tests/bootstrap.sql', migrations[0], ROOT/'supabase/tests/seed.sql']:
             sql(path.read_text(encoding='utf-8'))
+        # Verifica el upgrade sobre datos del esquema anterior, no solo una base vacía.
+        historical = json.loads(create(1))
+        for path in migrations[1:]:
+            sql(path.read_text(encoding='utf-8'))
+        migrated = json.loads(sql(f"select row_to_json(r) from public.reservations r where id='{historical['id']}';"))
+        if (migrated['total'],migrated['base_price'],migrated['discount'],migrated['deposit']+migrated['balance']) != (historical['total'],historical['total'],0,historical['total']):
+            raise AssertionError('La migración alteró el total histórico o produjo un desglose inconsistente.')
 
     def setUp(self):
         sql('truncate public.reservations restart identity cascade; truncate public.promotions cascade;')
@@ -191,6 +199,18 @@ class AgendaTests(unittest.TestCase):
         self.assertEqual(sql('select public.expire_holds();',role='service_role'),'0')
         self.assertEqual(sql(f"select status from public.reservations where id='{reservation['id']}';",actor=PLAYER),'expired')
         self.assertEqual(sql(f"select count(*) from public.reservation_events where reservation_id='{reservation['id']}';",actor=PLAYER),'2')
+
+    def test_13_weekday_and_expired_promotion_use(self):
+        promotion = self.promotion(capacity=1)
+        sql(f"update public.promotions set weekdays=array[(extract(dow from (now() at time zone 'America/Bogota')::date+1)::integer+1)%7] where id='{promotion}';")
+        query = f"select discount from public.quote_slot('{COURT}',(now() at time zone 'America/Bogota')::date+1,'12:00',60);"
+        self.assertEqual(sql(query,role='anon'),'0')
+        sql(f"update public.promotions set weekdays=array[0,1,2,3,4,5,6] where id='{promotion}';")
+        first = json.loads(create(1,time='12:00'))
+        self.assertEqual(sql(query,role='anon'),'0')
+        sql(f"update public.reservations set expires_at=now()-interval '1 second' where id='{first['id']}';")
+        self.assertEqual(sql(query,role='anon'),'20000')
+        self.assertEqual(json.loads(create(1,time='12:00',actor=OTHER))['discount'],20000)
 
 
 if __name__ == '__main__':
