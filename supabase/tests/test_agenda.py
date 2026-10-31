@@ -60,6 +60,15 @@ class AgendaTests(unittest.TestCase):
     def setUp(self):
         sql('truncate public.reservations restart identity cascade; truncate public.promotions cascade;')
 
+    def test_00_explicit_function_permissions(self):
+        for role in ('anon', 'authenticated'):
+            self.assertEqual(sql(f"select has_function_privilege('{role}','public.audit_reservation()','EXECUTE');"), 'f')
+            self.assertEqual(sql(f"select has_function_privilege('{role}','public.expire_holds()','EXECUTE');"), 'f')
+        for signature in ('public.create_reservation(uuid,date,time,integer,integer,text,uuid,text)', 'public.transition_reservation(uuid,text,text)'):
+            self.assertEqual(sql(f"select has_function_privilege('anon','{signature}','EXECUTE');"), 'f')
+            self.assertEqual(sql(f"select has_function_privilege('authenticated','{signature}','EXECUTE');"), 't')
+        self.assertIn('permission denied', sql(f"select public.create_reservation('{COURT}',current_date+1,'19:00',60,10,'X',gen_random_uuid());", role='anon', ok=False))
+
     def test_01_visibility_and_direct_writes(self):
         self.assertEqual(sql('select count(*) from public.courts;', role='anon'), '2')
         self.assertEqual(sql('select count(*) from public.courts;', actor=OUTSIDER), '3')
