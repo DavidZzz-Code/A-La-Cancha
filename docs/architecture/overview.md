@@ -31,9 +31,11 @@ Crear cada carpeta al implementar su issue, evitando directorios vacíos por ant
 
 En `apps/mobile/app/` viven rutas y composición. En `apps/mobile/src/features/<nombre>/` viven pantallas y elementos propios del módulo. `src/components/` es para presentación reutilizada; `src/lib/` contiene clientes de servicios y configuración. No imponer subcarpetas internas hasta necesitarlas.
 
-## Modelo inicial por diseñar
+## Modelo implementado y pendiente
 
-Usuarios y perfiles; establecimientos y membresías; sedes; canchas físicas; reglas de apertura; bloqueos de agenda; reservas y eventos; pagos y reembolsos; promociones; reseñas. Son entidades propuestas, todavía no existe un esquema implementado.
+El laboratorio PostgreSQL implementa establecimientos, membresías, canchas, apertura diaria, reservas, bloqueos, eventos y promociones. Tiene RLS, exclusión de intervalos, cotización e idempotencia. Ver [ADR 0002](decisions/0002-reservation-laboratory.md) y [ADR 0003](decisions/0003-server-pricing.md).
+
+La app Expo sigue usando un catálogo ficticio y persistencia local. Todavía faltan autenticación real, conexión a la agenda, panel de propietarios, pagos, reembolsos y reseñas. Los favoritos están dentro de discovery mientras no necesiten un módulo independiente.
 
 ## Garantías
 
@@ -48,4 +50,4 @@ Usuarios y perfiles; establecimientos y membresías; sedes; canchas físicas; re
 
 Separar desarrollo, pruebas y producción al configurar servicios. Versionar migraciones y archivos `.env.example` sin secretos. No comprar ni publicar servicios como parte de esta fundación.
 
-Los comandos de instalación, versiones, lockfile y CI se incorporarán al inicializar Expo. Hoy el repositorio contiene estructura y documentación, no un workspace instalable.
+El workspace Expo usa npm workspaces, Node 24 y lockfile versionado. CI comprueba tipos, reglas, exportaciones y recorridos web; otro workflow prueba PostgreSQL real. Ver [ejecución y evidencia](../engineering/prototype.md). Exportar bundles no equivale a probar o publicar apps nativas.

@@ -1,14 +1,10 @@
 # Backend y persistencia
 
-Estado: servicio y esquema todavía no creados. No se han configurado credenciales ni cobros.
+Laboratorio PostgreSQL implementado y probado; todavía no desplegado ni conectado a la app. No hay claves de servicio ni pagos configurados.
 
-## Organización al implementar
+- migrations/: esquema, RLS, exclusión de intervalos, cotización y control de bloqueos.
+- tests/: PostgreSQL real, actores distintos y conexiones simultáneas. Ver [ejecución](tests/README.md).
 
-- `migrations/`: cambios SQL ordenados y versionados.
-- `functions/`: operaciones de servidor y webhooks que lo necesiten.
-- `tests/`: pruebas relevantes de permisos, concurrencia y persistencia.
-- `seed.sql`: datos ficticios y claramente identificados para desarrollo.
+Las reservas externas y mantenimientos ocupan la misma agenda. El servidor calcula el precio y guarda su desglose histórico. Los clientes no pueden modificar tablas directamente.
 
-Crear cada elemento cuando se utilice. Ninguna clave de servicio puede llegar a las apps cliente. Aplicar permisos por usuario y establecimiento y proteger solapamientos en la base de datos.
-
-Versionar decisiones y migraciones; no corregir producción con cambios manuales que no puedan reproducirse. Ver [arquitectura](../docs/architecture/overview.md) y [reglas de reservas](../docs/product/reservation-rules.md).
+Ver [ADR 0002](../docs/architecture/decisions/0002-reservation-laboratory.md) y [ADR 0003](../docs/architecture/decisions/0003-server-pricing.md). La confirmación manual no acredita pagos; el anticipo es ilustrativo. Falta configurar Supabase real, autenticación móvil, cron, políticas comerciales y onboarding.

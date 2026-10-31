@@ -23,7 +23,7 @@ def sql(query, actor=None, role=None, ok=True):
     if actor:
         prefix = f"set role authenticated; set request.jwt.claim.sub='{actor}';"
     elif role:
-        assert role in ('anon', 'authenticated')
+        assert role in ('anon', 'authenticated', 'service_role')
         prefix = f'set role {role};'
     result = subprocess.run(['psql', '-XqAt', '-v', 'ON_ERROR_STOP=1'], input=prefix+query,
                             text=True, capture_output=True, timeout=20, encoding='utf-8')
@@ -46,8 +46,19 @@ class AgendaTests(unittest.TestCase):
     def setUpClass(cls):
         if os.environ.get('PGDATABASE') != 'alacancha_test':
             raise RuntimeError('PGDATABASE debe ser alacancha_test. No ejecutar sobre datos existentes.')
-        for path in [ROOT/'supabase/tests/bootstrap.sql', ROOT/'supabase/migrations/202610300001_agenda.sql', ROOT/'supabase/tests/seed.sql']:
+        migrations = sorted((ROOT/'supabase/migrations').glob('*.sql'))
+        for path in [ROOT/'supabase/tests/bootstrap.sql', migrations[0], ROOT/'supabase/tests/seed.sql']:
             sql(path.read_text(encoding='utf-8'))
+        # Verifica el upgrade sobre datos del esquema anterior, no solo una base vacía.
+        historical = json.loads(create(1))
+        for path in migrations[1:]:
+            sql(path.read_text(encoding='utf-8'))
+        migrated = json.loads(sql(f"select row_to_json(r) from public.reservations r where id='{historical['id']}';"))
+        if (migrated['total'],migrated['base_price'],migrated['discount'],migrated['deposit']+migrated['balance']) != (historical['total'],historical['total'],0,historical['total']):
+            raise AssertionError('La migración alteró el total histórico o produjo un desglose inconsistente.')
+
+    def setUp(self):
+        sql('truncate public.reservations restart identity cascade; truncate public.promotions cascade;')
 
     def test_01_visibility_and_direct_writes(self):
         self.assertEqual(sql('select count(*) from public.courts;', role='anon'), '2')
@@ -123,10 +134,83 @@ class AgendaTests(unittest.TestCase):
 
     def test_08_database_constraint_survives_rpc_bypass(self):
         reservation = json.loads(create(8))
-        query = f"""insert into public.reservations(court_id,actor_id,kind,status,starts_at,ends_at,team,players,total,idempotency_key)
-          select court_id,actor_id,'external','confirmed',starts_at,ends_at,'Intento directo',10,1,gen_random_uuid()
+        query = f"""insert into public.reservations(court_id,actor_id,kind,status,starts_at,ends_at,team,players,total,idempotency_key,base_price,discount,deposit,balance)
+          select court_id,actor_id,'external','confirmed',starts_at,ends_at,'Intento directo',10,total,gen_random_uuid(),base_price,discount,deposit,balance
           from public.reservations where id='{reservation['id']}';"""
         self.assertIn('exclusion constraint',sql(query,ok=False))
+
+    def promotion(self, capacity=10):
+        return sql(f"""insert into public.promotions(court_id,title,percent,valid_from,valid_until,weekdays,from_minute,until_minute,max_uses,enabled)
+          values('{COURT}','Oferta ficticia',20,(now() at time zone 'America/Bogota')::date,
+            (now() at time zone 'America/Bogota')::date+10,array[0,1,2,3,4,5,6],420,960,{capacity},true) returning id;""")
+
+    def test_09_quote_snapshot_and_promotion_boundaries(self):
+        promotion = self.promotion()
+        query = f"select row_to_json(q) from public.quote_slot('{COURT}',(now() at time zone 'America/Bogota')::date+1,'15:00',60) q;"
+        price = json.loads(sql(query,role='anon'))
+        self.assertEqual((price['base_price'],price['discount'],price['total'],price['deposit'],price['balance']),(100001,20000,80001,24000,56001))
+        self.assertEqual(price['discount_funder'],'venue')
+        key = str(uuid.uuid4())
+        reservation = json.loads(create(1,time='15:00',key=key))
+        self.assertEqual(reservation['promotion_id'],promotion)
+        self.assertEqual(reservation['total'],price['total'])
+        self.assertEqual(json.loads(create(2,time='15:30'))['discount'],0)
+        self.assertEqual(json.loads(create(11,time='12:00'))['discount'],0)
+        sql(f"update public.promotions set title='Nueva versión',percent=10 where id='{promotion}';")
+        repeated = json.loads(create(1,time='15:00',key=key))
+        self.assertEqual(repeated['total'],80001)
+        self.assertEqual(repeated['promotion_title'],'Oferta ficticia')
+        self.assertIn('permission denied',sql("update public.promotions set percent=99;",actor=OWNER,ok=False))
+
+    def test_10_last_promotion_use_is_atomic_and_cancel_releases(self):
+        self.promotion(capacity=1)
+        barrier = threading.Barrier(2)
+        def attempt(data):
+            actor,time = data
+            barrier.wait(timeout=5)
+            return json.loads(create(1,time=time,actor=actor))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(attempt,[(PLAYER,'12:00'),(OTHER,'13:00')]))
+        self.assertEqual(sorted(r['discount'] for r in results),[0,20000])
+        discounted = next(r for r in results if r['discount'])
+        sql(f"select public.transition_reservation('{discounted['id']}','cancelled','Prueba de cupo');",actor=discounted['actor_id'])
+        self.assertEqual(json.loads(create(1,time='14:00'))['discount'],20000)
+
+    def test_11_active_hold_limit_across_courts_is_atomic(self):
+        create(1,time='19:00')
+        create(1,time='21:00')
+        barrier = threading.Barrier(2)
+        def attempt(court):
+            barrier.wait(timeout=5)
+            try: return ('ok',json.loads(create(2,court=court)))
+            except AssertionError as error: return ('rejected',str(error))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(attempt,[COURT,SECOND]))
+        self.assertEqual(sum(status=='ok' for status,_ in results),1,results)
+        self.assertIn('hold_limit_reached',next(value for status,value in results if status=='rejected'))
+        self.assertEqual(sql("select count(*) from public.reservations where status='held';",actor=PLAYER),'3')
+
+    def test_12_expiration_maintenance_is_restricted_and_audited(self):
+        reservation = json.loads(create(1))
+        sql(f"update public.reservations set expires_at=now()-interval '1 second' where id='{reservation['id']}';")
+        self.assertIn('permission denied',sql('select public.expire_holds();',actor=OWNER,ok=False))
+        self.assertIn('permission denied',sql('select public.expire_holds();',role='anon',ok=False))
+        self.assertEqual(sql('select public.expire_holds();',role='service_role'),'1')
+        self.assertEqual(sql('select public.expire_holds();',role='service_role'),'0')
+        self.assertEqual(sql(f"select status from public.reservations where id='{reservation['id']}';",actor=PLAYER),'expired')
+        self.assertEqual(sql(f"select count(*) from public.reservation_events where reservation_id='{reservation['id']}';",actor=PLAYER),'2')
+
+    def test_13_weekday_and_expired_promotion_use(self):
+        promotion = self.promotion(capacity=1)
+        sql(f"update public.promotions set weekdays=array[(extract(dow from (now() at time zone 'America/Bogota')::date+1)::integer+1)%7] where id='{promotion}';")
+        query = f"select discount from public.quote_slot('{COURT}',(now() at time zone 'America/Bogota')::date+1,'12:00',60);"
+        self.assertEqual(sql(query,role='anon'),'0')
+        sql(f"update public.promotions set weekdays=array[0,1,2,3,4,5,6] where id='{promotion}';")
+        first = json.loads(create(1,time='12:00'))
+        self.assertEqual(sql(query,role='anon'),'0')
+        sql(f"update public.reservations set expires_at=now()-interval '1 second' where id='{first['id']}';")
+        self.assertEqual(sql(query,role='anon'),'20000')
+        self.assertEqual(json.loads(create(1,time='12:00',actor=OTHER))['discount'],20000)
 
 
 if __name__ == '__main__':

@@ -2,6 +2,8 @@
 
 Estado: implementación para pruebas; no desplegada ni conectada a la app.
 
+Evolución: [ADR 0003](0003-server-pricing.md) añade promociones, desglose, límite de bloqueos por actor y una operación restringida de limpieza. Los límites descritos abajo corresponden a la primera migración.
+
 ## Decisión
 
 PostgreSQL protege cada cancha con una restricción de exclusión GiST sobre intervalos `[inicio, fin)`. Jugadores, reservas externas y bloqueos utilizan la misma tabla. Las operaciones bloquean primero la cancha y después las reservas; la restricción sigue rechazando colisiones aunque se omita la función de entrada.
