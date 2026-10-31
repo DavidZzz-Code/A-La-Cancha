@@ -7,7 +7,7 @@ Entrega de [#15](https://github.com/DavidZzz-Code/A-La-Cancha/issues/15), en el 
 Usar Node 24. Desde la raíz:
 
 ```sh
-npm install
+npm ci
 npm run web
 npm run check
 npm run export:web
@@ -18,7 +18,7 @@ npm run test:e2e
 
 En Windows, usar `npm.cmd` si PowerShell bloquea `npm.ps1`. Para Android: `npm run android -w @alacancha/mobile` con un emulador compatible o dispositivo preparado. Un bundle JavaScript no es un APK firmado ni demuestra compatibilidad en un teléfono.
 
-La primera instalación completa produce el lockfile que se incorporará al repositorio; después se utilizará `npm ci`. El workflow conserva ese archivo como artefacto durante esta inicialización. La instalación reproducible requiere versionarlo.
+El lockfile está versionado. Usar `npm ci` para reproducir la instalación verificada.
 
 ## Implementación
 
@@ -48,6 +48,8 @@ Las reglas aceptan hasta treinta días de anticipación y la interfaz muestra ca
 
 Se ejecutaron localmente catorce pruebas de dominio y almacén demo: todas correctas. Incluyen conflicto, adyacencia, cancelación, vencimiento, validación, cambio de fecha UTC, precios y restauración. También pasó TypeScript del paquete de dominio.
 
-La instalación local completa recibió HTTP 403 de npm. En GitHub Actions ya pasaron instalación, TypeScript del workspace y exportaciones web/Android/iOS para `f0a69eb`. Consultar el resultado del commit concreto para E2E y capturas.
+La instalación local completa recibió HTTP 403 de npm. La ejecución [41164233904](https://github.com/DavidZzz-Code/A-La-Cancha/actions/runs/41164233904), commit `a1638e4`, pasó instalación con lockfile, TypeScript del workspace, catorce pruebas de lógica, exportaciones web/Android/iOS y cuatro E2E de Chromium (390×844 y 1440×1000).
 
-Pendientes: versionar lockfile, completar E2E y revisar capturas. Android/iOS físicos, entrevistas y pruebas con organizadores siguen pendientes aunque la web pase.
+Se revisaron visualmente las capturas de inicio, resultados y confirmación. [Inicio móvil](../design/previews/explore-mobile.png), [escritorio](../design/previews/explore-desktop.png) y [confirmación móvil](../design/previews/confirmation-mobile.png). Las capturas usan fecha fija de pruebas y datos ficticios.
+
+Pendientes: Android/iOS físicos, entrevistas, pruebas con organizadores y conexión al backend. Las cuatro pruebas E2E corresponden a web responsive, no a dispositivos nativos.

@@ -22,8 +22,7 @@ jobs:
         with:
           node-version: '24'
       - name: Instalar dependencias
-        run: |
-          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+        run: npm ci
       - run: npm run check
       - run: npm run export:web
       - run: npm run export:native
