@@ -60,6 +60,10 @@ class AgendaTests(unittest.TestCase):
     def setUp(self):
         sql('truncate public.reservations restart identity cascade; truncate public.promotions cascade;')
 
+    def test_00_extension_schema(self):
+        self.assertEqual(sql("select n.nspname from pg_extension e join pg_namespace n on n.oid=e.extnamespace where e.extname='btree_gist';"), 'extensions')
+        self.assertEqual(sql("select convalidated from pg_constraint where conrelid='public.reservations'::regclass and contype='x';"), 't')
+
     def test_00_explicit_function_permissions(self):
         for role in ('anon', 'authenticated'):
             self.assertEqual(sql(f"select has_function_privilege('{role}','public.audit_reservation()','EXECUTE');"), 'f')
