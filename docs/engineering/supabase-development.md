@@ -1,6 +1,6 @@
 # Supabase de desarrollo
 
-Proyecto: a-la-cancha-dev (`pednpnrgxszcffivfozo`), región us-east-1. Verificado el 31 de octubre de 2026. Sin datos reales ni integración móvil todavía.
+Proyecto: a-la-cancha-dev (`pednpnrgxszcffivfozo`), región us-east-1. Verificado el 31 de octubre de 2026. Sin datos reales. Esta sección registra el despliegue inicial; consultar las actualizaciones al final.
 
 ## Migraciones aplicadas
 
@@ -29,3 +29,7 @@ Supabase otorga permisos directos por defecto a funciones nuevas. Revocar solo P
 - Configurar vencimiento periódico de holds; actualmente existe expiración al reservar y función administrativa, sin cron.
 
 La app sigue siendo demo local. No hay cobros, usuarios de prueba creados ni reservas reales.
+
+## Actualización del 3 de noviembre
+
+La regresión de permisos está integrada (#23); btree_gist está en extensions y el cron está activo (#28). La app consulta catálogo/ocupación/precios por PostgREST (#30), con una cancha DEMO. Estas entregas resuelven los pendientes históricos correspondientes de arriba. La reconciliación del historial sigue pendiente: no ejecutar db push sin resolver #26. La escritura desde la app y JWT reales se siguen en [la entrega de bloqueos](remote-reservations-verification.md).
