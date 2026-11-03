@@ -1,6 +1,6 @@
 # Bloqueos remotos — entrega del 3 de noviembre de 2026
 
-Base: main `c84b10b`. Rama: `feat/9-remote-holds`. Avance parcial de #6 y #9.
+Base: main `c84b10b`. Rama: `feat/9-remote-holds`. [PR #31](https://github.com/DavidZzz-Code/A-La-Cancha/pull/31). Avance parcial de #6 y #9.
 
 ## Alcance
 
@@ -22,3 +22,9 @@ La solicitud pendiente se conserva por cuenta antes de enviarla. Un reintento co
 Provisionar dos cuentas sintéticas de desarrollo mediante Auth Admin, sin invitaciones ni datos personales. Mantener sus credenciales fuera de GitHub. Con sus sesiones reales, comprobar: lectura pública; creación por A; reintento de A con la misma clave; conflicto de B sobre el turno; imposibilidad de que B consulte/cancele la reserva de A; cancelación de A y liberación del turno. Repetir tras interrupción de conexión y comprobar vencimiento desde el servidor. Registrar resultados anonimizados y limpiar las cuentas por la API de Auth conforme al procedimiento de pruebas.
 
 La prueba nativa en Android y los criterios restantes de #6/#9 siguen pendientes. Una exportación y una API simulada no cierran esos issues.
+
+## Primera ejecución de CI
+
+[GitHub Actions 41711786880](https://github.com/DavidZzz-Code/A-La-Cancha/actions/runs/41711786880) aprobó app y PostgreSQL sobre `b0128c3`: lint, tipos, lógica, exportaciones, demo local y recorridos de cuentas/agenda/bloqueos simulados. La revisión posterior hace explícita la representación de una sola fila en las RPC (`single`) y verifica su cabecera en las pruebas. El resultado definitivo de esa revisión se registra en el PR.
+
+La revisión de las capturas de CI detectó que el formulario seguía ocupando el primer plano tras crear un bloqueo. Se oculta después del resultado para mostrar el precio final y evitar otra pulsación de creación accidental. Una nueva selección reinicia la pantalla y recupera cualquier solicitud pendiente de esa cuenta.

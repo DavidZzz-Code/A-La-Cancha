@@ -24,6 +24,7 @@ async function fixture(page:Page, options:{lostCreate?:boolean;conflict?:boolean
     }
     if(url.pathname.endsWith('/create_reservation')) {
       creates++;
+      expect(route.request().headers().accept).toContain('application/vnd.pgrst.object+json');
       expect(JSON.parse(Buffer.from(route.request().headers().authorization.split('.')[1], 'base64url').toString()).sub).toBe(actor);
       if(options.conflict)return route.fulfill({status:409,json:{code:'23P01',message:'conflicting key'}});
       const body=route.request().postDataJSON();expect(body.p_kind).toBe('player');
@@ -33,7 +34,7 @@ async function fixture(page:Page, options:{lostCreate?:boolean;conflict?:boolean
       return route.fulfill({json:row});
     }
     if(url.pathname.endsWith('/transition_reservation')) {
-      cancels++;expect(route.request().postDataJSON().p_status).toBe('cancelled');
+      cancels++;expect(route.request().headers().accept).toContain('application/vnd.pgrst.object+json');expect(route.request().postDataJSON().p_status).toBe('cancelled');
       row={...row,status:'cancelled'};
       if(options.lostCancel && !cancellationLost){cancellationLost=true;return route.abort('connectionreset');}
       return route.fulfill({json:row});
@@ -57,6 +58,8 @@ test.describe('Bloqueos autenticados con API simulada',()=>{
     await page.getByRole('button',{name:'Crear bloqueo de 10 minutos'}).click();
     await expect(page.getByText(/Total final del servidor:.*95.000/)).toBeVisible();
     await expect(page.getByRole('button',{name:'Cancelar bloqueo'})).toBeVisible();
+    await expect(page.getByRole('button',{name:'Crear bloqueo de 10 minutos'})).toHaveCount(0);
+    await page.getByText('Resultado comprobado').scrollIntoViewIfNeeded();
     await page.screenshot({path:info.outputPath('remote-hold.png'),fullPage:true});
     await page.reload();
     await expect(page.getByRole('button',{name:'Cancelar bloqueo'})).toBeVisible();

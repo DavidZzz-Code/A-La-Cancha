@@ -31,4 +31,4 @@ La auditoría npm local quedó bloqueada por revisión automática de una conexi
 
 ## Continuación
 
-La rama `feat/9-remote-holds` implementa creación, consulta y cancelación de bloqueos de desarrollo, con recuperación de solicitudes interrumpidas. Consultar [verificación y límites](../engineering/remote-reservations-verification.md). No se cierra #6 ni #9: faltan JWT reales, dispositivo y los criterios comerciales del ciclo completo.
+El [PR #31](https://github.com/DavidZzz-Code/A-La-Cancha/pull/31), en borrador, implementa creación, consulta y cancelación de bloqueos de desarrollo, con recuperación de solicitudes interrumpidas. Consultar [verificación y límites](../engineering/remote-reservations-verification.md). No se cierra #6 ni #9: faltan JWT reales, dispositivo y los criterios comerciales del ciclo completo.

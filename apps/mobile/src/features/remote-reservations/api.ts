@@ -22,7 +22,7 @@ export async function createHold(intent: HoldIntent) {
   const {data,error} = await db.rpc('create_reservation',{
     p_court:intent.court,p_date:intent.date,p_time:intent.time,p_duration:intent.duration,
     p_players:intent.players,p_team:intent.team,p_key:intent.key,p_kind:'player',
-  });
+  }).single();
   if (error) throw error;
   return readReservation(data,intent.actor);
 }
@@ -34,7 +34,7 @@ export async function cancelHold(actor: string, id: string) {
   const row = readReservation(current,actor);
   if (row.status === 'cancelled' || row.status === 'expired') return row;
   if (row.status !== 'held') throw Error('Solo se cancelan bloqueos de prueba desde esta pantalla.');
-  const {data,error} = await db.rpc('transition_reservation',{p_id:id,p_status:'cancelled',p_reason:'Cancelación de bloqueo de desarrollo por el jugador'});
+  const {data,error} = await db.rpc('transition_reservation',{p_id:id,p_status:'cancelled',p_reason:'Cancelación de bloqueo de desarrollo por el jugador'}).single();
   if (error) throw error;
   return readReservation(data,actor);
 }

@@ -13,7 +13,7 @@ export default function RemoteReservationsScreen() {
   const {session,loading} = useAuth(); const params = useLocalSearchParams(); const router = useRouter();
   return <Page back><Heading title="Mis bloqueos conectados" subtitle="Pruebas en desarrollo. Un bloqueo temporal no confirma una reserva ni acredita un pago."/>
     {loading ? <Label>Cargando sesión…</Label> : !session ? <><Empty title="Inicia sesión para continuar" message="Puedes explorar sin cuenta. Para bloquear un turno necesitas una cuenta de desarrollo."/><Button onPress={()=>router.push('/profile')}>Ir a mi cuenta</Button></>
-      : <ReservationPanel key={session.user.id} actor={session.user.id} selection={readSelection(params)}/>}
+      : <ReservationPanel key={session.user.id+JSON.stringify(readSelection(params))} actor={session.user.id} selection={readSelection(params)}/>}
   </Page>;
 }
 function ReservationPanel({actor,selection}:{actor:string;selection:Selection|null}) {
@@ -79,13 +79,13 @@ function ReservationPanel({actor,selection}:{actor:string;selection:Selection|nu
       <Label>Solicitud pendiente de comprobar: {intent.date} · {intent.time} · {intent.duration} min · {intent.team}</Label>
       <Label>Conservamos los mismos datos y la misma referencia aunque hayas cambiado de horario o recargado la página.</Label>
       <Button disabled={busy} onPress={()=>void submit()}>{busy?'Comprobando…':'Comprobar o reintentar solicitud'}</Button>
-    </View> : selection && <View style={{gap:12,padding:20,borderRadius:20,backgroundColor:'#EAF1E6'}}>
+    </View> : selection && !result && <View style={{gap:12,padding:20,borderRadius:20,backgroundColor:'#EAF1E6'}}>
       <Label accessibilityRole="header">Bloquear turno de prueba</Label>
       <Label>{selection.date} · {selection.time} · {selection.duration} min · hora de Colombia</Label>
       <Label>El servidor vuelve a comprobar disponibilidad y precio. Revisa el importe final después de crear el bloqueo; puedes cancelarlo. No se realizará ningún cobro.</Label>
       <Label>Nombre del equipo</Label><TextInput accessibilityLabel="Nombre del equipo conectado" value={team} onChangeText={setTeam} maxLength={40} editable={!busy} style={{borderWidth:1,borderColor:'#D9DFD5',borderRadius:12,padding:14}}/>
       <Label>Jugadores</Label><TextInput accessibilityLabel="Jugadores del turno conectado" value={players} onChangeText={setPlayers} maxLength={2} keyboardType="number-pad" editable={!busy} style={{borderWidth:1,borderColor:'#D9DFD5',borderRadius:12,padding:14}}/>
-      <Label>El servidor verifica la capacidad de la cancha seleccionada.</Label>
+      <Label>Indica cuántas personas jugarán.</Label>
       <Button disabled={busy || !team.trim() || !validPlayers} onPress={()=>void submit()}>{busy?'Creando bloqueo…':'Crear bloqueo de 10 minutos'}</Button>
     </View>}
     {!!message && <Label accessibilityRole="alert">{message}</Label>}
