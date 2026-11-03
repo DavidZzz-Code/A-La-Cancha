@@ -15,11 +15,11 @@ La solicitud pendiente se conserva por cuenta antes de enviarla. Un reintento co
 - Se añadieron seis escenarios Playwright, ejecutados en tamaños móvil y escritorio por CI: creación/cancelación, respuesta perdida y recarga, conflicto, cancelación interrumpida, vencimiento y cierre de sesión.
 - La descarga de Chromium de Playwright devolvió ZIP incompletos. Chrome alternativo se descargó, pero el entorno local rechazó la creación de sockets del navegador. La validación visual y E2E se delega al runner de CI; los escenarios no se consideran aprobados por estar escritos. Consultar el resultado del PR.
 - La consulta de Supabase de desarrollo confirmó proyecto activo, una cancha publicada, cero usuarios y cero reservas antes de esta entrega. No se escribieron datos remotos.
-- No se ha probado un JWT real: no existen cuentas de prueba provisionadas y el conector disponible no ofrece administración de usuarios Auth. No se fabricaron usuarios mediante SQL ni se enviaron correos.
+- La validación inicial no contaba con usuarios. Posteriormente se provisionaron dos cuentas de prueba mediante Auth y se verificaron sesiones JWT reales, como se detalla abajo.
 
-## Validación de integración pendiente
+## Procedimiento de integración
 
-Provisionar dos cuentas sintéticas de desarrollo mediante Auth Admin, sin invitaciones ni datos personales. Mantener sus credenciales fuera de GitHub. Con sus sesiones reales, comprobar: lectura pública; creación por A; reintento de A con la misma clave; conflicto de B sobre el turno; imposibilidad de que B consulte/cancele la reserva de A; cancelación de A y liberación del turno. Repetir tras interrupción de conexión y comprobar vencimiento desde el servidor. Registrar resultados anonimizados y limpiar las cuentas por la API de Auth conforme al procedimiento de pruebas.
+Usar dos cuentas sintéticas de desarrollo provisionadas mediante Auth, sin invitaciones ni datos personales. Mantener sus credenciales fuera de GitHub. Con sus sesiones reales, comprobar: lectura pública; creación por A; reintento de A con la misma clave; conflicto de B sobre el turno; imposibilidad de que B consulte/cancele la reserva de A; cancelación de A y liberación del turno. Repetir tras interrupción de conexión y comprobar vencimiento desde el servidor. Registrar resultados anonimizados y limpiar las cuentas por la API de Auth conforme al procedimiento de pruebas.
 
 La prueba nativa en Android y los criterios restantes de #6/#9 siguen pendientes. Una exportación y una API simulada no cierran esos issues.
 
@@ -33,6 +33,6 @@ La revisión de las capturas de CI detectó que el formulario seguía ocupando e
 
 Dos cuentas de prueba, Chrome y Supabase dev, turno DEMO del 4 de noviembre a las 07:00 de Colombia (60 minutos): A creó un bloqueo; B recibió conflicto sobre el mismo turno; A canceló; B pudo bloquear el horario liberado y cancelarlo. Cada historial mostró únicamente su registro. Una consulta SQL final confirmó exactamente un registro cancelado por jugador. No hubo cobros.
 
-La solicitud de A se conservó tras un error de acceso y se completó después de renovar su sesión. No se ha demostrado aún la causa raíz. Se usaron orígenes locales separados por la sincronización Auth entre pestañas. Pendientes: ataque directo de cancelación con JWT ajeno, expiración real y Android físico.
+La solicitud de A se conservó tras un error de acceso y se completó después de renovar su sesión. No se ha demostrado aún la causa raíz. Se usaron orígenes locales separados por la sincronización Auth entre pestañas. La prueba directa posterior con JWT de B recibió HTTP 403 / 42501 al cancelar el bloqueo de A; la consulta directa de ese registro devolvió cero filas. Pendientes: expiración real y Android físico.
 
 La interfaz distingue ahora la cancelación en curso (Cancelando bloqueo…) de la creación y conserva el resultado anterior hasta recibir la respuesta.
