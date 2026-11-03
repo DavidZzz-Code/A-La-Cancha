@@ -31,4 +31,6 @@ La auditoría npm local quedó bloqueada por revisión automática de una conexi
 
 ## Continuación
 
-El [PR #31](https://github.com/DavidZzz-Code/A-La-Cancha/pull/31), en borrador, implementa creación, consulta y cancelación de bloqueos de desarrollo, con recuperación de solicitudes interrumpidas. Consultar [verificación y límites](../engineering/remote-reservations-verification.md). No se cierra #6 ni #9: faltan JWT reales, dispositivo y los criterios comerciales del ciclo completo.
+El [PR #31](https://github.com/DavidZzz-Code/A-La-Cancha/pull/31), en borrador, implementa creación, consulta y cancelación de bloqueos de desarrollo, con recuperación de solicitudes interrumpidas. Consultar [verificación y límites](../engineering/remote-reservations-verification.md). No se cierra #6 ni #9: faltan pruebas adversariales con JWT, expiración real, dispositivo y los criterios comerciales del ciclo completo.
+
+Prueba manual real del 3 de noviembre: dos jugadores crearon y cancelaron bloqueos, se rechazó el conflicto de horario y se recuperó el turno liberado. Ambos registros quedaron cancelados, sin duplicados. El acceso inicial de una sesión falló y se recuperó al iniciar sesión de nuevo; diagnóstico pendiente. Ver la guía de verificación enlazada arriba.

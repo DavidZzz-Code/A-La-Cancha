@@ -28,3 +28,11 @@ La prueba nativa en Android y los criterios restantes de #6/#9 siguen pendientes
 [GitHub Actions 41711786880](https://github.com/DavidZzz-Code/A-La-Cancha/actions/runs/41711786880) aprobó app y PostgreSQL sobre `b0128c3`: lint, tipos, lógica, exportaciones, demo local y recorridos de cuentas/agenda/bloqueos simulados. La revisión posterior hace explícita la representación de una sola fila en las RPC (`single`) y verifica su cabecera en las pruebas. El resultado definitivo de esa revisión se registra en el PR.
 
 La revisión de las capturas de CI detectó que el formulario seguía ocupando el primer plano tras crear un bloqueo. Se oculta después del resultado para mostrar el precio final y evitar otra pulsación de creación accidental. Una nueva selección reinicia la pantalla y recupera cualquier solicitud pendiente de esa cuenta.
+
+## Validación manual real — 2026-11-03
+
+Dos cuentas de prueba, Chrome y Supabase dev, turno DEMO del 4 de noviembre a las 07:00 de Colombia (60 minutos): A creó un bloqueo; B recibió conflicto sobre el mismo turno; A canceló; B pudo bloquear el horario liberado y cancelarlo. Cada historial mostró únicamente su registro. Una consulta SQL final confirmó exactamente un registro cancelado por jugador. No hubo cobros.
+
+La solicitud de A se conservó tras un error de acceso y se completó después de renovar su sesión. No se ha demostrado aún la causa raíz. Se usaron orígenes locales separados por la sincronización Auth entre pestañas. Pendientes: ataque directo de cancelación con JWT ajeno, expiración real y Android físico.
+
+La interfaz distingue ahora la cancelación en curso (Cancelando bloqueo…) de la creación y conserva el resultado anterior hasta recibir la respuesta.

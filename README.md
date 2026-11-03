@@ -6,7 +6,7 @@ El primer mercado es Cartagena, Colombia. La expansión a otras ciudades depende
 
 ## Estado actual
 
-Prototipo Expo en desarrollo: catálogo ficticio, búsqueda, favoritos, cotización y reservas locales de demostración. La agenda está desplegada en Supabase de desarrollo. La app ofrece lectura remota de canchas, horarios y precios; esta entrega añade bloqueos autenticados de prueba, pendientes de validación JWT real y Android físico. La demo local permanece separada. No hay pagos ni establecimientos afiliados. Ver [ejecución, pruebas y límites](docs/engineering/prototype.md).
+Prototipo Expo en desarrollo: catálogo ficticio, búsqueda, favoritos, cotización y reservas locales de demostración. La agenda está desplegada en Supabase de desarrollo. La app ofrece lectura remota de canchas, horarios y precios; esta entrega añade bloqueos autenticados de prueba, con creación, conflicto y cancelación verificados mediante sesiones reales en web; siguen pendientes expiración real, permisos adversariales con JWT y Android físico. La demo local permanece separada. No hay pagos ni establecimientos afiliados. Ver [ejecución, pruebas y límites](docs/engineering/prototype.md).
 
 Ver el [estado verificado y próximos pasos](docs/planning/status.md).
 

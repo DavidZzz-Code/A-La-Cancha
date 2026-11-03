@@ -20,7 +20,7 @@ function ReservationPanel({actor,selection}:{actor:string;selection:Selection|nu
   const router = useRouter(); const storageKey = 'alacancha.hold-intent.'+actor;
   const [team,setTeam] = useState(''); const [players,setPlayers] = useState('10');
   const [intent,setIntent] = useState<HoldIntent|null>(null); const [ready,setReady] = useState(false);
-  const [busy,setBusy] = useState(false); const [message,setMessage] = useState('');
+  const [operation,setOperation] = useState<string|null>(null); const busy = operation !== null; const [message,setMessage] = useState('');
   const [revision,setRevision] = useState(0); const [now,setNow] = useState(()=>Date.now());
   const [list,setList] = useState<{revision:number;rows:RemoteReservation[];error:string}>({revision:-1,rows:[],error:''});
   const [result,setResult] = useState<RemoteReservation|null>(null);
@@ -42,7 +42,7 @@ function ReservationPanel({actor,selection}:{actor:string;selection:Selection|nu
   useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(timer);},[]);
   async function submit() {
     if(pending.current || !ready || (!intent && !selection))return;
-    pending.current=true;setBusy(true);setMessage('');setResult(null);
+    pending.current=true;setOperation('create');setMessage('');setResult(null);
     let request:HoldIntent|null=intent;
     try {
       request=intent ?? readIntent({...selection,actor,key:randomUUID(),team:team.trim(),players:Number(players)},actor);
@@ -63,14 +63,14 @@ function ReservationPanel({actor,selection}:{actor:string;selection:Selection|nu
         try {await sessionStorage.removeItem(storageKey);if(mounted.current)setIntent(null);}
         catch {if(mounted.current)setMessage('No pudimos actualizar la solicitud guardada. Reintenta para comprobar su estado.');}
       }
-    } finally {pending.current=false;if(mounted.current)setBusy(false);}
+    } finally {pending.current=false;if(mounted.current)setOperation(null);}
   }
   async function cancel(id:string) {
     if(pending.current)return;
-    pending.current=true;setBusy(true);setMessage('');setResult(null);
+    pending.current=true;setOperation(id);setMessage('');
     try {const row=await cancelHold(actor,id);if(mounted.current){setResult(row);setRevision(v=>v+1);}}
     catch {if(mounted.current){setMessage('No pudimos comprobar la cancelación. Actualiza o reintenta; verificaremos primero el estado guardado.');setRevision(v=>v+1);}}
-    finally {pending.current=false;if(mounted.current)setBusy(false);}
+    finally {pending.current=false;if(mounted.current)setOperation(null);}
   }
   const validPlayers=/^\d+$/.test(players) && Number(players)>=1 && Number(players)<=30;
   return <View style={{gap:18,maxWidth:800}}>
@@ -79,7 +79,7 @@ function ReservationPanel({actor,selection}:{actor:string;selection:Selection|nu
       <Label>Solicitud pendiente de comprobar: {intent.date} · {intent.time} · {intent.duration} min · {intent.team}</Label>
       <Label>Conservamos los mismos datos y la misma referencia aunque hayas cambiado de horario o recargado la página.</Label>
       <Button disabled={busy} onPress={()=>void submit()}>{busy?'Comprobando…':'Comprobar o reintentar solicitud'}</Button>
-    </View> : selection && !result && <View style={{gap:12,padding:20,borderRadius:20,backgroundColor:'#EAF1E6'}}>
+    </View> : selection && !result && !(busy && operation !== 'create') && <View style={{gap:12,padding:20,borderRadius:20,backgroundColor:'#EAF1E6'}}>
       <Label accessibilityRole="header">Bloquear turno de prueba</Label>
       <Label>{selection.date} · {selection.time} · {selection.duration} min · hora de Colombia</Label>
       <Label>El servidor vuelve a comprobar disponibilidad y precio. Revisa el importe final después de crear el bloqueo; puedes cancelarlo. No se realizará ningún cobro.</Label>
@@ -102,7 +102,7 @@ function ReservationPanel({actor,selection}:{actor:string;selection:Selection|nu
       <Label accessibilityRole="header">{row.team}</Label>
       <Label>{new Date(row.starts_at).toLocaleString('es-CO',{timeZone:'America/Bogota'})} · hora de Colombia</Label>
       <Label>{reservationStatus(row,now)}</Label><Label>{money(row.total)} COP · precio guardado</Label>
-      {row.status==='held' && <><Label>Vence: {new Date(row.expires_at!).toLocaleTimeString('es-CO',{timeZone:'America/Bogota'})}. El servidor decide la vigencia.</Label><Button secondary disabled={busy || Date.parse(row.expires_at!)<=now} onPress={()=>void cancel(row.id)}>Cancelar bloqueo</Button></>}
+      {row.status==='held' && <><Label>Vence: {new Date(row.expires_at!).toLocaleTimeString('es-CO',{timeZone:'America/Bogota'})}. El servidor decide la vigencia.</Label><Button secondary disabled={busy || Date.parse(row.expires_at!)<=now} onPress={()=>void cancel(row.id)}>{operation===row.id?'Cancelando bloqueo…':'Cancelar bloqueo'}</Button></>}
     </View>)}
   </View>;
 }
