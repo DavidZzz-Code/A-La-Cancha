@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 const court={id:'20000000-0000-0000-0000-000000000001',name:'Cancha conectada de prueba',capacity:10,open_minute:420,close_minute:600,venues:{name:'Sede de prueba',city:'Cartagena',published:true}};
 test.describe('Agenda remota con API simulada',()=>{
   test.skip(process.env.AUTH_E2E!=='1','Requiere configuración de prueba.');
-  test('consulta ocupación y precio de servidor sin crear reserva',async({page})=>{
+  test('consulta ocupación y precio de servidor sin crear reserva',async({page},testInfo)=>{
     let writes=0;
     await page.route('https://auth-test.supabase.co/**',async route=>{
       const url=new URL(route.request().url());
@@ -17,6 +17,7 @@ test.describe('Agenda remota con API simulada',()=>{
     await expect(page.getByRole('button',{name:'07:00',exact:true})).toHaveCount(0);
     await page.getByRole('button',{name:'08:00',exact:true}).click();
     await expect(page.getByText(/Precio del servidor:/)).toContainText('90.000');
+    await page.screenshot({path:testInfo.outputPath('remote-agenda.png'),fullPage:true});
     await page.getByRole('button',{name:'90 min',exact:true}).click();
     await expect(page.getByText(/Precio del servidor:/)).toHaveCount(0);
     expect(writes).toBe(0);
