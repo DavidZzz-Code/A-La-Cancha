@@ -29,7 +29,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - name: Exportar cuentas con API de prueba
-        run: npm run export:web
+        run: npm run export:web --workspace @alacancha/mobile -- --output-dir dist-auth
         env:
           EXPO_PUBLIC_SUPABASE_URL: https://auth-test.supabase.co
           EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_test_only
@@ -37,6 +37,7 @@ jobs:
         run: npx playwright test tests/e2e/auth.spec.ts
         env:
           AUTH_E2E: '1'
+          PREVIEW_DIR: apps/mobile/dist-auth
       - uses: actions/upload-artifact@v4
         if: always()
         with:

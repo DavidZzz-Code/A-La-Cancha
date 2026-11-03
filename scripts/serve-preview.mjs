@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
-const root = resolve('apps/mobile/dist');
+const root = resolve(process.env.PREVIEW_DIR || 'apps/mobile/dist');
 const types = {'.html':'text/html; charset=utf-8','.js':'application/javascript','.css':'text/css','.ttf':'font/ttf','.png':'image/png','.svg':'image/svg+xml','.json':'application/json'};
 createServer(async (req,res) => {
   try {

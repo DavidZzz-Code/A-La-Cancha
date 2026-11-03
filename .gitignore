@@ -30,3 +30,6 @@ credentials.json
 Thumbs.db
 *.log
 supabase/.temp/
+
+# Exportación aislada de pruebas de autenticación
+dist-auth/
