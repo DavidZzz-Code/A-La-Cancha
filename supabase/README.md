@@ -1,10 +1,13 @@
 # Backend y persistencia
 
-Laboratorio PostgreSQL implementado y probado; todavía no desplegado ni conectado a la app. No hay claves de servicio ni pagos configurados.
+Agenda desplegada en Supabase de desarrollo, con RLS, exclusión de intervalos, cotización y mantenimiento periódico de bloqueos. La app todavía no crea reservas remotas. No hay pagos ni establecimientos reales afiliados.
 
-- migrations/: esquema, RLS, exclusión de intervalos, cotización y control de bloqueos.
-- tests/: PostgreSQL real, actores distintos y conexiones simultáneas. Ver [ejecución](tests/README.md).
+- migrations/: esquema, permisos y restricciones portables.
+- tests/: PostgreSQL real, actores distintos y conexiones simultáneas; ver [ejecución](tests/README.md).
+- operations/: configuración específica del entorno Supabase, separada del laboratorio.
 
-Las reservas externas y mantenimientos ocupan la misma agenda. El servidor calcula el precio y guarda su desglose histórico. Los clientes no pueden modificar tablas directamente.
+Ver [despliegue](../docs/engineering/supabase-development.md) y [mantenimiento](../docs/engineering/hold-maintenance.md). El historial remoto necesita reconciliación antes de automatizar db push (#26).
 
-Ver [ADR 0002](../docs/architecture/decisions/0002-reservation-laboratory.md) y [ADR 0003](../docs/architecture/decisions/0003-server-pricing.md). La confirmación manual no acredita pagos; el anticipo es ilustrativo. Falta configurar Supabase real, autenticación móvil, cron, políticas comerciales y onboarding.
+Las reservas externas y mantenimientos ocupan la misma agenda. El servidor calcula el precio y guarda su desglose. Los clientes no pueden modificar tablas directamente. La confirmación manual no acredita pagos; el anticipo sigue siendo ilustrativo.
+
+Pendientes: integración de autenticación y reservas con la app, validación JWT/PostgREST, políticas comerciales y onboarding de propietarios.

@@ -6,7 +6,9 @@ El primer mercado es Cartagena, Colombia. La expansión a otras ciudades depende
 
 ## Estado actual
 
-Prototipo Expo en desarrollo: catálogo ficticio, búsqueda, favoritos, cotización y reservas locales de demostración. No hay pagos, agenda remota ni establecimientos afiliados. Ver [ejecución, pruebas y límites](docs/engineering/prototype.md).
+Prototipo Expo en desarrollo: catálogo ficticio, búsqueda, favoritos, cotización y reservas locales de demostración. La agenda está desplegada en Supabase de desarrollo, pero la app todavía usa reservas locales. No hay pagos ni establecimientos afiliados. Ver [ejecución, pruebas y límites](docs/engineering/prototype.md).
+
+Ver el [estado verificado y próximos pasos](docs/planning/status.md).
 
 ## Empieza aquí
 
