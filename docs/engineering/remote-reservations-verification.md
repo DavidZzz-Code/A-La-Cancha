@@ -21,7 +21,7 @@ La solicitud pendiente se conserva por cuenta antes de enviarla. Un reintento co
 
 Usar dos cuentas sintéticas de desarrollo provisionadas mediante Auth, sin invitaciones ni datos personales. Mantener sus credenciales fuera de GitHub. Con sus sesiones reales, comprobar: lectura pública; creación por A; reintento de A con la misma clave; conflicto de B sobre el turno; imposibilidad de que B consulte/cancele la reserva de A; cancelación de A y liberación del turno. Repetir tras interrupción de conexión y comprobar vencimiento desde el servidor. Registrar resultados anonimizados y limpiar las cuentas por la API de Auth conforme al procedimiento de pruebas.
 
-La prueba nativa en Android y los criterios restantes de #6/#9 siguen pendientes. Una exportación y una API simulada no cierran esos issues.
+El recorrido principal en Android físico mediante Expo Go fue confirmado por el usuario el 4 de noviembre; los criterios restantes de #6/#9 siguen pendientes. Una exportación y una API simulada no cierran esos issues.
 
 ## Primera ejecución de CI
 
@@ -33,6 +33,13 @@ La revisión de las capturas de CI detectó que el formulario seguía ocupando e
 
 Dos cuentas de prueba, Chrome y Supabase dev, turno DEMO del 4 de noviembre a las 07:00 de Colombia (60 minutos): A creó un bloqueo; B recibió conflicto sobre el mismo turno; A canceló; B pudo bloquear el horario liberado y cancelarlo. Cada historial mostró únicamente su registro. Una consulta SQL final confirmó exactamente un registro cancelado por jugador. No hubo cobros.
 
-La solicitud de A se conservó tras un error de acceso y se completó después de renovar su sesión. No se ha demostrado aún la causa raíz. Se usaron orígenes locales separados por la sincronización Auth entre pestañas. La prueba directa posterior con JWT de B recibió HTTP 403 / 42501 al cancelar el bloqueo de A; la consulta directa de ese registro devolvió cero filas. Pendientes: expiración real y Android físico.
+La solicitud de A se conservó tras un error de acceso y se completó después de renovar su sesión. No se ha demostrado aún la causa raíz. Se usaron orígenes locales separados por la sincronización Auth entre pestañas. La prueba directa posterior con JWT de B recibió HTTP 403 / 42501 al cancelar el bloqueo de A; la consulta directa de ese registro devolvió cero filas. La expiración y reutilización posterior se comprobaron con sesiones reales; el recorrido principal Android fue confirmado por el usuario (ver actualización siguiente).
 
 La interfaz distingue ahora la cancelación en curso (Cancelando bloqueo…) de la creación y conserva el resultado anterior hasta recibir la respuesta.
+
+## Actualización — 4 de noviembre de 2026
+
+- El bloqueo de prueba quedó expired por vencimiento natural. Con JWT de B se creó un nuevo held para exactamente la misma cancha e intervalo (5 de noviembre, 07:00–08:00 Colombia) y luego se canceló. No se alteraron fechas para forzar la expiración. No se midió la latencia exacta del cron.
+- La corrección de AuthProvider relee la sesión de su propio almacenamiento ante eventos de Auth, en vez de adoptar la identidad transmitida por otra pestaña. [CI sobre 0fc2a4b](https://github.com/DavidZzz-Code/A-La-Cancha/actions/runs/41720104792) aprobado, incluida la regresión de dos pestañas.
+- El usuario confirmó el recorrido principal en Android físico vía Expo Go: acceso, agenda, creación y cancelación. [Procedimiento, incidencias de red y límites de evidencia](android-device-validation.md).
+- Pendientes móviles: modelo/versiones, restauración tras reiniciar, segundo plano, red interrumpida y APK de producción. No cerrar automáticamente #6/#9: registro, recuperación y ciclo comercial completo continúan fuera de esta entrega.
