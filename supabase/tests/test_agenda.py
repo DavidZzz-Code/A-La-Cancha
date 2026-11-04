@@ -82,6 +82,18 @@ class AgendaTests(unittest.TestCase):
         self.assertIn('authentication_required', sql(f"select public.create_reservation('{COURT}',current_date+1,'19:00',60,10,'X',gen_random_uuid());", role='authenticated', ok=False))
         self.assertIn('court_unavailable', create(1,court=PRIVATE,ok=False))
 
+    def test_owner_agenda_scope_and_revocation(self):
+        first = json.loads(create(1))
+        private = json.loads(create(1, actor=OUTSIDER, court=PRIVATE, kind='block'))
+        self.assertEqual(sql('select count(*) from public.venue_members;', actor=OWNER), '1')
+        self.assertEqual(sql(f"select count(*) from public.venue_members where user_id='{OUTSIDER}';", actor=OWNER), '0')
+        self.assertEqual(sql(f"select count(*) from public.reservations where id='{first['id']}';", actor=OWNER), '1')
+        self.assertEqual(sql(f"select count(*) from public.reservations where id='{private['id']}';", actor=OWNER), '0')
+        self.assertEqual(sql(f"select count(*) from public.reservations where id='{first['id']}';", actor=OUTSIDER), '0')
+        # Roll back the membership deletion so the fixture remains valid for other tests.
+        result = sql(f"begin; delete from public.venue_members where user_id='{OWNER}'; set local role authenticated; set local request.jwt.claim.sub='{OWNER}'; select count(*) from public.reservations where id='{first['id']}'; rollback;")
+        self.assertEqual(result, '0')
+
     def test_02_server_price_idempotency_and_events(self):
         key = str(uuid.uuid4())
         first = json.loads(create(2,duration=90,key=key))

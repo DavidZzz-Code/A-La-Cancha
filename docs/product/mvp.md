@@ -12,7 +12,7 @@ Buscar por fecha, hora y zona → comparar → abrir cancha → revisar condicio
 - Ficha con fotos autorizadas, ubicación, servicios y precio total.
 - Agenda por cancha física con turnos ocupados, libres y bloqueados.
 - Reserva con estados claros y sin solapamientos.
-- Panel web mínimo para registrar también las reservas externas.
+- Panel para gestionar agenda y reservas de la app, disponible en web; registro manual de ocupaciones externas como apoyo para evitar dobles reservas.
 - Anticipo, saldo y cancelaciones con reglas visibles. El proveedor de pagos se decide antes de integrar cobros.
 - Favoritos, consulta de reservas y enlaces compartibles.
 - Reseñas internas tras una reserva completada.
