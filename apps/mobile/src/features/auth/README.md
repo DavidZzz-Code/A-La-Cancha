@@ -9,3 +9,9 @@ AccountPanel permite iniciar y cerrar sesión con cuentas de prueba existentes. 
 Pendiente: validar sesión real, expiración, revocación, falta de conexión y tamaño de tokens en dispositivos Android/iOS. Las pruebas de configuración y exportaciones no sustituyen esas verificaciones. No usar este primer acceso de desarrollo como lanzamiento público.
 
 CI exporta además una variante con un dominio ficticio interceptado por Playwright. Comprueba credenciales rechazadas, sesión restaurada, cierre y error de red en dos tamaños de pantalla. Estas pruebas no envían solicitudes a Supabase real ni validan JWT reales.
+
+## Prueba con dos cuentas en web
+
+Aunque el almacenamiento web usa sessionStorage, Supabase emite eventos de Auth entre pestañas del mismo origen mediante BroadcastChannel. No asumir que dos pestañas representan cuentas independientes: el estado visible puede recibir una sesión distinta de la almacenada. Para las pruebas actuales usar contextos de navegador separados u orígenes locales distintos (localhost y 127.0.0.1). AuthProvider ahora toma cada evento como aviso para releer la sesión de su propio almacenamiento, fuera del callback de Auth. No adopta directamente la identidad transmitida por otra pestaña. Se conserva el aislamiento de sessionStorage y se ignoran resultados asincrónicos obsoletos.
+
+El 3 de noviembre se verificaron dos accesos reales en desarrollo, creación y cancelación de bloqueos, conflicto de horario y recuperación del turno liberado. La sesión inicial de A requirió volver a iniciar sesión; su causa raíz sigue pendiente de reproducción.

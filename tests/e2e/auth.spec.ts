@@ -44,3 +44,35 @@ test.describe('Cuenta de desarrollo con API simulada', () => {
     await expect(page.getByRole('button', { name: 'Iniciar sesión', exact: true })).toBeEnabled();
   });
 });
+
+
+test('eventos entre pestañas no sustituyen la sesión almacenada', async ({ context, page }) => {
+  test.skip(process.env.AUTH_E2E !== '1', 'Requiere configuración de prueba.');
+  const other = await context.newPage();
+  const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  await context.route('https://auth-test.supabase.co/**', async route => {
+    if (route.request().url().includes('/token')) {
+      const email = route.request().postDataJSON().email;
+      const user = { id: email.startsWith('a@') ? '00000000-0000-0000-0000-000000000001' : '00000000-0000-0000-0000-000000000002', email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} };
+      const access_token = encode({alg:'HS256',typ:'JWT'})+'.'+encode({sub:user.id,exp:Math.floor(Date.now()/1000)+3600})+'.fixture';
+      return route.fulfill({json:{user,access_token,refresh_token:'fixture-'+user.id,expires_in:3600,token_type:'bearer'}});
+    }
+    if (route.request().url().includes('/logout')) return route.fulfill({status:204});
+    return route.abort();
+  });
+  await page.goto('/profile'); await other.goto('/profile');
+  for (const [tab,email] of [[page,'a@example.test'],[other,'b@example.test']] as const) {
+    await tab.getByLabel('Correo de la cuenta').fill(email);
+    await tab.getByLabel('Contraseña de la cuenta').fill('fixture-password');
+    await tab.getByRole('button',{name:'Iniciar sesión',exact:true}).click();
+    await expect(tab.getByText('Sesión iniciada: '+email)).toBeVisible();
+  }
+  // Reload A so its storage is read again, then generate an auth event in B.
+  await page.reload();
+  await expect(page.getByText('Sesión iniciada: a@example.test')).toBeVisible();
+  await other.getByRole('button',{name:'Cerrar sesión',exact:true}).click();
+  await expect(other.getByRole('button',{name:'Iniciar sesión',exact:true})).toBeVisible();
+  await expect(page.getByText('Sesión iniciada: a@example.test')).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('Sesión iniciada: a@example.test')).toBeVisible();
+});

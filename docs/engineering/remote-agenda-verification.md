@@ -6,4 +6,4 @@ Se consultó la API PostgREST con la clave publicable (sin service_role ni sesi�
 
 CI añade seis recorridos de agenda con API simulada: ocupación/precio, catálogo vacío y error de consulta, en móvil y escritorio. Captura remote-agenda.png dentro del artefacto de resultados de Playwright. Estos recorridos no sustituyen Android físico ni la creación de reservas por un usuario real.
 
-La ruta /remote-agenda permanece separada del catálogo ficticio local. No copia datos remotos a DemoStore ni crea reservas. Próxima entrega: creación/cancelación autenticada con idempotencia y manejo de conflictos, sin confirmar pagos.
+La ruta /remote-agenda permanece separada del catálogo ficticio local. No copia datos remotos a DemoStore ni crea reservas. Continuación: [creación/cancelación autenticada](remote-reservations-verification.md) con idempotencia y manejo de conflictos, sin confirmar pagos.

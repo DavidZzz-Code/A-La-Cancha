@@ -24,7 +24,7 @@ export function AccountPanel() {
   return <View style={{ gap: 12, padding: 20 }}>
     <Label accessibilityRole="header">Cuenta de desarrollo</Label>
     <Button secondary onPress={() => router.push('/remote-agenda')}>Consultar agenda conectada</Button>
-    <Label>La sesión es real; las canchas y reservas de esta demostración siguen siendo ficticias.</Label>
+    <Label>Cuenta de desarrollo. La agenda conectada guarda bloqueos de prueba en el servidor; la demostración local permanece separada.</Label>
     {loading ? <Label>Cargando sesión…</Label> : session ? <><Label>Sesión iniciada: {session.user.email}</Label><Button disabled={busy} onPress={() => void submit('signOut')}>Cerrar sesión</Button></> : <>
       <Label>Correo</Label><TextInput accessibilityLabel="Correo de la cuenta" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" editable={!busy} style={{ borderWidth: 1, borderColor: '#D9DFD5', borderRadius: 12, padding: 14 }}/>
       <Label>Contraseña</Label><TextInput accessibilityLabel="Contraseña de la cuenta" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" autoComplete="current-password" editable={!busy} style={{ borderWidth: 1, borderColor: '#D9DFD5', borderRadius: 12, padding: 14 }}/>
