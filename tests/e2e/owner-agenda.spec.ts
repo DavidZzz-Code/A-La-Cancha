@@ -13,7 +13,7 @@ async function fixture(page: Page, options: { noAccess?: boolean; failure?: bool
     if (url.pathname.endsWith('/token')) return route.fulfill({ json: { user, access_token, refresh_token: 'fixture', expires_in: 3600, token_type: 'bearer' } });
     if (url.pathname.endsWith('/logout')) return route.fulfill({ status: 204 });
     if (route.request().method() !== 'GET') { writes++; return route.abort(); }
-    const respond = (json: unknown[], count = json.length) => route.fulfill({ json, headers: { 'content-range': `${json.length ? '0-'+(json.length-1) : '*'}/${count}` } });
+    const respond = (json: unknown[], count = json.length) => route.fulfill({ json, headers: { 'content-range': `${json.length ? '0-'+(json.length-1) : '*'}/${count}`, 'access-control-expose-headers': 'content-range' } });
     if (url.pathname.endsWith('/venue_members')) {
       expect(url.searchParams.get('user_id')).toBe('eq.'+actor);
       return respond(revoked || options.noAccess ? [] : [{ venue_id: venue, user_id: actor }]);
@@ -42,31 +42,31 @@ async function fixture(page: Page, options: { noAccess?: boolean; failure?: bool
   });
   await page.goto('/profile');
   await page.getByLabel('Correo de la cuenta').fill(user.email);
-  await page.getByLabel('Contraseña de la cuenta').fill('fixture-password');
-  await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click();
-  await expect(page.getByText('Sesión iniciada: '+user.email)).toBeVisible();
+  await page.getByLabel('Contrase�a de la cuenta').fill('fixture-password');
+  await page.getByRole('button',{name:'Iniciar sesi�n',exact:true}).click();
+  await expect(page.getByText('Sesi�n iniciada: '+user.email)).toBeVisible();
   await page.getByRole('button',{name:'Agenda de mi establecimiento'}).click();
   return { revoke: () => { revoked=true; }, reads: () => reads, writes: () => writes };
 }
 test.describe('Agenda del propietario con API simulada', () => {
-  test.skip(process.env.AUTH_E2E !== '1', 'Requiere configuración de prueba.');
+  test.skip(process.env.AUTH_E2E !== '1', 'Requiere configuraci�n de prueba.');
   test('consulta por cancha y fecha, distingue estados sin realizar escrituras', async ({page}, info) => {
     const api = await fixture(page);
-    await expect(page.getByText('07:00 · Ocupado',{exact:true})).toBeVisible();
-    await expect(page.getByText('Reserva de la app · Bloqueo temporal · sin confirmar',{exact:true})).toBeVisible();
-    await expect(page.getByText('Registro manual · Cancelada',{exact:true})).toBeVisible();
-    await expect(page.getByText('Bloqueo del establecimiento · Confirmada',{exact:true})).toBeVisible();
+    await expect(page.getByText('07:00 � Ocupado',{exact:true})).toBeVisible();
+    await expect(page.getByText('Reserva de la app � Bloqueo temporal � sin confirmar',{exact:true})).toBeVisible();
+    await expect(page.getByText('Registro manual � Cancelada',{exact:true})).toBeVisible();
+    await expect(page.getByText('Bloqueo del establecimiento � Confirmada',{exact:true})).toBeVisible();
     await expect(page.getByText(/Plazo agotado; pendiente/)).toBeVisible();
-    await page.getByRole('button',{name:'Mañana',exact:true}).click();
-    await expect(page.getByText('08:00 · Libre al consultar',{exact:true})).toBeVisible();
+    await page.getByRole('button',{name:'Ma�ana',exact:true}).click();
+    await expect(page.getByText('08:00 � Libre al consultar',{exact:true})).toBeVisible();
     await page.screenshot({path:info.outputPath('owner-agenda.png'),fullPage:true});
-    await page.getByRole('button',{name:'Sede DEMO · Cancha 2',exact:true}).click();
+    await page.getByRole('button',{name:'Sede DEMO � Cancha 2',exact:true}).click();
     await expect(page.getByText('No hay reservas registradas para esta cancha y fecha.')).toBeVisible();
     await expect(page.getByText(/No publicada para jugadores/)).toBeVisible();
     await expect(page.getByText(/Equipo de la app/)).toHaveCount(0);
     expect(api.reads()).toBeGreaterThanOrEqual(3); expect(api.writes()).toBe(0);
   });
-  test('sin membresías no consulta reservas ni inventa un establecimiento', async ({page}) => {
+  test('sin membres�as no consulta reservas ni inventa un establecimiento', async ({page}) => {
     const api=await fixture(page,{noAccess:true});
     await expect(page.getByText('Sin canchas asignadas',{exact:true})).toBeVisible();
     expect(api.reads()).toBe(0);
@@ -77,7 +77,7 @@ test.describe('Agenda del propietario con API simulada', () => {
     await expect(page.getByText(/Libre al consultar/)).toHaveCount(0);
     await expect(page.getByText('No hay reservas registradas para esta cancha y fecha.')).toHaveCount(0);
   });
-  test('revocar acceso y actualizar retira datos; cerrar sesión protege la ruta', async ({page}) => {
+  test('revocar acceso y actualizar retira datos; cerrar sesi�n protege la ruta', async ({page}) => {
     const api=await fixture(page);
     await expect(page.getByText(/Equipo de la app/)).toBeVisible();
     api.revoke();
@@ -85,10 +85,11 @@ test.describe('Agenda del propietario con API simulada', () => {
     await expect(page.getByText('Sin canchas asignadas',{exact:true})).toBeVisible();
     await expect(page.getByText(/Equipo de la app/)).toHaveCount(0);
     await page.goto('/profile');
-    await page.getByRole('button',{name:'Cerrar sesión',exact:true}).click();
-    await expect(page.getByRole('button',{name:'Iniciar sesión',exact:true})).toBeVisible();
+    await page.getByRole('button',{name:'Cerrar sesi�n',exact:true}).click();
+    await expect(page.getByRole('button',{name:'Iniciar sesi�n',exact:true})).toBeVisible();
     await page.goto('/owner-agenda');
     await expect(page.getByRole('button',{name:'Ir a mi cuenta'})).toBeVisible();
     await expect(page.getByText(/Equipo de la app/)).toHaveCount(0);
   });
 });
+
