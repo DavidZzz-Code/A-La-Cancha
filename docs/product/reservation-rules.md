@@ -2,6 +2,8 @@
 
 Estado: propuesta de trabajo; validar condiciones comerciales con los establecimientos antes del piloto.
 
+El recorrido principal de búsqueda, reserva y consulta de estado ocurre dentro de A La Cancha. WhatsApp no es un requisito para reservar ni confirmar. Los encargados pueden registrar ocupaciones de otros canales en la misma agenda como apoyo operativo para evitar dobles reservas.
+
 ## Tiempo y unidad reservable
 
 - Una sede puede tener varias canchas físicas. Cada cancha mantiene su propia agenda.

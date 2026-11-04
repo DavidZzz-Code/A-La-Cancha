@@ -35,7 +35,7 @@ En `apps/mobile/app/` viven rutas y composición. En `apps/mobile/src/features/<
 
 El laboratorio PostgreSQL implementa establecimientos, membresías, canchas, apertura diaria, reservas, bloqueos, eventos y promociones. Tiene RLS, exclusión de intervalos, cotización e idempotencia. Ver [ADR 0002](decisions/0002-reservation-laboratory.md) y [ADR 0003](decisions/0003-server-pricing.md).
 
-La app Expo conserva el catálogo ficticio y persistencia local. La agenda conectada consulta Supabase; el módulo remote-reservations implementa bloqueos autenticados de desarrollo con claves de reintento persistentes. Faltan validación JWT real, pruebas nativas, panel de propietarios, pagos, reembolsos y reseñas. Los favoritos están dentro de discovery mientras no necesiten un módulo independiente.
+La app Expo conserva el catálogo ficticio y persistencia local. La agenda conectada consulta Supabase; el módulo remote-reservations implementa bloqueos autenticados de desarrollo con claves de reintento persistentes. Se verificaron JWT reales y el usuario reportó el recorrido del jugador en Android físico para #31. La primera consulta del propietario vive en Expo, también disponible en web, según el [ADR 0004](decisions/0004-owner-agenda-in-expo.md). Quedan pendientes acciones del propietario, validación de este panel con un encargado, pagos, reembolsos y reseñas. Los favoritos están dentro de discovery mientras no necesiten un módulo independiente.
 
 ## Garantías
 
