@@ -130,6 +130,47 @@ class AgendaTests(unittest.TestCase):
         self.assertEqual(json.loads(create(4))['status'],'held')
         self.assertEqual(sql(f"select count(*) from public.reservation_events where reservation_id='{identifier}';",actor=PLAYER),'3')
 
+    def test_reschedule_decisions_and_inventory(self):
+        original = json.loads(create(4))
+        rid = original['id']
+        sql(f"select public.transition_reservation('{rid}','confirmed');",actor=OWNER)
+        target = f"(select starts_at+interval '1 day' from public.reservations where id='{rid}')"
+
+        def ask(key):
+            return f"select status from public.request_reschedule('{rid}',{target},'{key}');"
+
+        def decide(key, accept):
+            return f"select status from public.decide_reschedule('{key}',{accept});"
+
+        key = uuid.uuid4()
+        self.assertIn('reservation_unavailable',sql(ask(key),actor=OTHER,ok=False))
+        self.assertEqual(sql(ask(key),actor=PLAYER),'pending')
+        self.assertEqual(sql(ask(key),actor=PLAYER),'pending')
+        self.assertIn('unique',sql(ask(uuid.uuid4()),actor=PLAYER,ok=False))
+        self.assertEqual(sql('select count(*) from public.reschedule_requests;',actor=OTHER),'0')
+        self.assertIn('owner_required',sql(decide(key,'true'),actor=PLAYER,ok=False))
+        self.assertEqual(sql(decide(key,'false'),actor=OWNER),'rejected')
+        self.assertEqual(sql(decide(key,'true'),actor=OWNER),'rejected')
+
+        key = uuid.uuid4()
+        self.assertEqual(sql(ask(key),actor=PLAYER),'pending')
+        blocker = json.loads(create(5,actor=OTHER))
+        self.assertEqual(sql(decide(key,'true'),actor=OWNER),'unavailable')
+        self.assertEqual(sql(f"select starts_at='{original['starts_at']}' from public.reservations where id='{rid}';"),'t')
+        sql(f"select public.transition_reservation('{blocker['id']}','cancelled','Prueba');",actor=OTHER)
+
+        key = uuid.uuid4()
+        self.assertEqual(sql(ask(key),actor=PLAYER),'pending')
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            decisions = list(pool.map(lambda _: sql(decide(key,'true'),actor=OWNER),range(2)))
+        self.assertEqual(decisions,['approved','approved'])
+        moved = json.loads(sql(f"select row_to_json(r) from public.reservations r where id='{rid}';", actor=PLAYER))
+        self.assertEqual(moved['starts_at'],blocker['starts_at'])
+        self.assertEqual(moved['ends_at'],blocker['ends_at'])
+        for field in ('id','status','total','deposit','balance'):
+            self.assertEqual(moved[field],original[field])
+        self.assertEqual(json.loads(create(4))['status'],'held')
+
     def test_05_expiry_cannot_confirm_and_is_reclaimed(self):
         held = json.loads(create(5))
         sql(f"update public.reservations set expires_at=now()-interval '1 second' where id='{held['id']}';")

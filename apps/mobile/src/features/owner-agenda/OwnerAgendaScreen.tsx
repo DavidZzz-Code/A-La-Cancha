@@ -1,3 +1,4 @@
+import { Reschedule } from '../reschedule/Reschedule';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -60,6 +61,7 @@ function OwnerPanel({ actor }: { actor: string }) {
             <Label style={{ fontWeight: 'bold' }}>{colombiaTime(row.starts_at)}–{colombiaTime(row.ends_at)} · {row.team}</Label>
             <Label>{kindLabels[row.kind]} · {statusLabels[row.status]}</Label>
             {row.kind !== 'block' && <Label>{row.players} jugadores</Label>}
+            {row.kind==='player' && row.status==='confirmed' && <Reschedule row={row} owner onMoved={()=>setRefresh(n=>n+1)}/>}
             <ConfirmPlayerHold actor={actor} row={row} checkedAt={agenda.at} onSaved={() => setRefresh(v => v + 1)}/>
             <CancelExternalBooking actor={actor} row={row} checkedAt={agenda.at} onSaved={() => setRefresh(v => v + 1)}/>
             {row.status === 'held' && <Label>{Date.parse(row.expires_at!) <= agenda.at ? 'Plazo agotado; pendiente de actualización del servidor. El intervalo sigue marcado como ocupado.' : `Vence a las ${colombiaTime(row.expires_at!)}. Todavía no es una reserva confirmada.`}</Label>}

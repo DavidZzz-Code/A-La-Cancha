@@ -25,7 +25,7 @@ export function readQuote(value: unknown): ServerQuote {
   if (q.discount>q.base_price || q.total!==q.base_price-q.discount || q.total!==q.deposit+q.balance) throw Error('Cotización inconsistente.');
   return q;
 }
-export function openSlots(court: RemoteCourt, date: string, duration: number, busy: BusySlot[], now: number): string[] {
+export function openSlots(court: Pick<RemoteCourt, 'open' | 'close'>, date: string, duration: number, busy: BusySlot[], now: number): string[] {
   if (!validDate(date) || ![30,60,90,120].includes(duration)) throw Error('Turno inválido.');
   const result:string[]=[];
   for (let minute=court.open;minute+duration<=court.close;minute+=30) {
