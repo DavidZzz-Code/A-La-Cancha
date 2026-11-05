@@ -72,6 +72,18 @@ jobs:
       PGPASSWORD: disposable-test-only
     steps:
       - uses: actions/checkout@v4
+      - name: Preparar pg_cron en la base desechable
+        env:
+          POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          docker exec "$POSTGRES_CONTAINER" sh -ec 'apt-get update -qq && apt-get install -y postgresql-17-cron'
+          psql -v ON_ERROR_STOP=1 -c "ALTER SYSTEM SET shared_preload_libraries = 'pg_cron'"
+          docker exec "$POSTGRES_CONTAINER" sh -ec 'echo "cron.database_name = alacancha_test" >> "$PGDATA/postgresql.conf"'
+          docker restart "$POSTGRES_CONTAINER"
+          for attempt in {1..30}; do
+            if pg_isready -h "$PGHOST" -d "$PGDATABASE"; then break; fi
+            sleep 1
+          done
       - name: Probar migración, permisos y concurrencia
         run: python3 supabase/tests/test_agenda.py
   required:
