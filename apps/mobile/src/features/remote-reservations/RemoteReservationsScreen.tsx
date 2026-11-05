@@ -8,7 +8,7 @@ import { Button, Empty, Heading, Label, Page } from '../../components/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { sessionStorage } from '../auth/storage';
 import { cancelHold, createHold, fetchReservations } from './api';
-import { holdError, readIntent, readSelection, reservationStatus, type HoldIntent, type RemoteReservation, type Selection } from './contracts';
+import { decisionLabels, holdError, readIntent, readSelection, reservationStatus, type HoldIntent, type RemoteReservation, type Selection } from './contracts';
 
 export default function RemoteReservationsScreen() {
   const {session,loading} = useAuth(); const params = useLocalSearchParams(); const router = useRouter();
@@ -102,6 +102,8 @@ function ReservationPanel({actor,selection}:{actor:string;selection:Selection|nu
     {list.revision!==revision ? <Label>Consultando tus bloqueos…</Label> : list.error ? <Label accessibilityRole="alert">{list.error}</Label> : !list.rows.length ? <Label>Aún no tienes bloqueos conectados.</Label> : list.rows.map(row=><View key={row.id} style={{gap:10,padding:18,borderWidth:1,borderColor:'#D9DFD5',borderRadius:18}}>
       <Label accessibilityRole="header">{row.team}</Label>
       <Label>{new Date(row.starts_at).toLocaleString('es-CO',{timeZone:'America/Bogota'})} · hora de Colombia</Label>
+      {row.kind==='player' && row.status==='confirmed' && row.reschedule_requests?.[0] &&
+        <Label>Última decisión: {decisionLabels[row.reschedule_requests[0].status]}</Label>}
       <Label>{reservationStatus(row,now)}</Label><Label>{money(row.total)} COP · precio guardado</Label>
       {row.kind==='player' && row.status==='confirmed' && <Reschedule row={row} onMoved={()=>setRevision(n=>n+1)}/>}
       {row.status==='held' && <><Label>Vence: {new Date(row.expires_at!).toLocaleTimeString('es-CO',{timeZone:'America/Bogota'})}. El servidor decide la vigencia.</Label><Button secondary disabled={busy || Date.parse(row.expires_at!)<=now} onPress={()=>void cancel(row.id)}>{operation===row.id?'Cancelando bloqueo…':'Cancelar bloqueo'}</Button></>}

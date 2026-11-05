@@ -13,3 +13,5 @@ Ruta `/remote-reservations`, accesible desde la agenda conectada. Requiere una s
 Límites: no es un lanzamiento público; faltan sesiones JWT reales, Android físico, recuperación/registro de cuentas, aceptación comercial y paginación del historial. La persistencia web dura lo que dura la pestaña; al perderla se consulta el historial, sin garantía de recuperar la clave local. No se modificó el esquema remoto ni se crearon cuentas por SQL.
 
 Ver [evidencia y pendientes](../../../../../docs/engineering/remote-reservations-verification.md). Refs #6, #9.
+
+Al abrir o actualizar el historial conectado, cada reserva confirmada del jugador muestra junto a su horario la decisión más reciente sobre cambios de turno. Las solicitudes pendientes y el historial completo se pueden consultar en el detalle.
