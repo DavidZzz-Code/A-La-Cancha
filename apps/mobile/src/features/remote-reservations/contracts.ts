@@ -2,7 +2,7 @@ import { validDate } from '@alacancha/domain';
 export type Selection = { court: string; date: string; time: string; duration: number };
 export type HoldIntent = Selection & { key: string; actor: string; team: string; players: number };
 export type RemoteReservation = {
-  id: string; actor_id: string; court_id: string; idempotency_key: string;
+  kind?: 'player'|'external'|'block'; id: string; actor_id: string; court_id: string; idempotency_key: string;
   status: 'held' | 'confirmed' | 'completed' | 'cancelled' | 'expired';
   starts_at: string; ends_at: string; expires_at: string | null;
   team: string; players: number; total: number; discount: number; deposit: number; balance: number;

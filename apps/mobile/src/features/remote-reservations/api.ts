@@ -1,6 +1,6 @@
 import { supabase } from '../auth/client';
 import { readReservation, type HoldIntent } from './contracts';
-const columns = 'id,actor_id,court_id,idempotency_key,status,starts_at,ends_at,expires_at,team,players,total,discount,deposit,balance';
+const columns = 'id,kind,actor_id,court_id,idempotency_key,status,starts_at,ends_at,expires_at,team,players,total,discount,deposit,balance';
 async function client(actor: string) {
   if (!supabase) throw Error('Conexión pendiente.');
   const {data,error} = await supabase.auth.getSession();

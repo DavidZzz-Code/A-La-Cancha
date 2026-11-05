@@ -1,3 +1,4 @@
+import { Reschedule } from '../reschedule/Reschedule';
 import { useEffect, useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -102,6 +103,7 @@ function ReservationPanel({actor,selection}:{actor:string;selection:Selection|nu
       <Label accessibilityRole="header">{row.team}</Label>
       <Label>{new Date(row.starts_at).toLocaleString('es-CO',{timeZone:'America/Bogota'})} · hora de Colombia</Label>
       <Label>{reservationStatus(row,now)}</Label><Label>{money(row.total)} COP · precio guardado</Label>
+      {row.kind==='player' && row.status==='confirmed' && <Reschedule row={row} onMoved={()=>setRevision(n=>n+1)}/>}
       {row.status==='held' && <><Label>Vence: {new Date(row.expires_at!).toLocaleTimeString('es-CO',{timeZone:'America/Bogota'})}. El servidor decide la vigencia.</Label><Button secondary disabled={busy || Date.parse(row.expires_at!)<=now} onPress={()=>void cancel(row.id)}>{operation===row.id?'Cancelando bloqueo…':'Cancelar bloqueo'}</Button></>}
     </View>)}
   </View>;

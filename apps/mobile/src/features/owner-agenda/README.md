@@ -31,3 +31,9 @@ Si se interrumpe la respuesta, abrir la misma cancha y fecha en el dispositivo y
 Para cancelar un turno presencial confirmado antes de su inicio, el encargado abre el movimiento en la agenda, indica el motivo y confirma. El servidor exige membresía vigente, conserva el registro cancelado y libera el intervalo para los jugadores.
 
 El encargado puede confirmar desde la agenda el bloqueo vigente de un jugador. El servidor comprueba membresía, estado y vencimiento al confirmar. El jugador consulta el resultado en Mis reservas → Ver mis reservas conectadas → Actualizar mis bloqueos.
+
+## Cambio de horario
+
+El jugador abre una reserva confirmada desde Mis reservas → Ver mis reservas conectadas, solicita un horario libre y mantiene su turno original. En la agenda del día original el encargado abre Revisar cambios de horario. Puede aprobar o rechazar. El servidor vuelve a consultar precio y disponibilidad antes de mover la misma reserva. Una solicitud pendiente no ocupa el horario propuesto. El historial muestra la decisión y ambas fechas en hora colombiana.
+
+Prueba Android: solicitar con la cuenta del jugador, revisar con la cuenta del encargado y actualizar la lista del jugador. Repetir ocupando antes el destino con otro equipo: debe figurar Horario no disponible y conservarse la reserva original.
