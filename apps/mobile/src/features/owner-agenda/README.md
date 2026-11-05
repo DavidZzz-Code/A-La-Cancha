@@ -27,3 +27,5 @@ La migración `20261105122311_require_current_membership_for_maintenance.sql` ex
 En la agenda diaria, seleccionar una cancha y fecha y pulsar **Registrar turno presencial**. El encargado indica equipo, jugadores, duración y hora. Solo se ofrecen intervalos libres durante toda la duración consultada. El servidor comprueba nuevamente membresía, capacidad y solapamientos, guarda una reserva de tipo `external` y devuelve el precio calculado. Registrar el turno no procesa un cobro.
 
 Si se interrumpe la respuesta, abrir la misma cancha y fecha en el dispositivo y pulsar **Comprobar turno presencial**. Se reutiliza la referencia persistida antes del envío. Al comprobar el registro se actualiza la agenda común.
+
+Para cancelar un turno presencial confirmado antes de su inicio, el encargado abre el movimiento en la agenda, indica el motivo y confirma. El servidor exige membresía vigente, conserva el registro cancelado y libera el intervalo para los jugadores.

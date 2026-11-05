@@ -157,6 +157,16 @@ class AgendaTests(unittest.TestCase):
         self.assertIn('invalid_slot',create(31,ok=False))
         self.assertIn('invalid_slot',create(-1,ok=False))
 
+    def test_external_cancellation_releases_slot_and_requires_membership(self):
+        booking = json.loads(create(2, kind='external', actor=OWNER))
+        cancel = f"select row_to_json(r) from public.transition_reservation('{booking['id']}','cancelled','Equipo avisó') r;"
+        revoked = sql(f"begin; delete from public.venue_members where user_id='{OWNER}'; set local role authenticated; set local request.jwt.claim.sub='{OWNER}'; {cancel} rollback;", ok=False)
+        self.assertIn('reservation_unavailable', revoked)
+        cancelled = json.loads(sql(cancel, actor=OWNER))
+        self.assertEqual(cancelled['cancellation_reason'], 'Equipo avisó')
+        self.assertEqual(cancelled['status'], 'cancelled')
+        self.assertEqual(json.loads(create(2))['status'], 'held')
+
     def test_maintenance_retry_cancel_audit_and_permissions(self):
         key = str(uuid.uuid4())
         block = json.loads(create(2, kind='block', actor=OWNER, key=key))
