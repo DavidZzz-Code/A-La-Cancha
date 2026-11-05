@@ -19,3 +19,5 @@ El encargado elige un inicio futuro, una duración de 30, 60, 90 o 120 minutos y
 La operación existente del servidor crea un registro de tipo `block` con importe cero en la agenda común. El motivo se guarda en `team` para este tipo de registro. La exclusión de intervalos resuelve los conflictos incluso si un jugador reserva simultáneamente. La cancelación de un mantenimiento futuro exige motivo y queda registrada en el historial de eventos.
 
 Para verificar en Android, crear un mantenimiento en una cancha DEMO, actualizar la agenda de jugador y verificar que desaparece el horario. Cancelar desde el panel, actualizar otra vez y comprobar que el turno vuelve a estar disponible. Registrar el resultado por separado de la prueba de consulta de #32.
+
+La migración `20261105122311_require_current_membership_for_maintenance.sql` exige membresía vigente en el servidor para toda transición de un bloqueo operativo, incluido el que registró el propio encargado antes de perder acceso.

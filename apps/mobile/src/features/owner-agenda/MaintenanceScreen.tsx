@@ -58,7 +58,12 @@ function MaintenancePanel({ actor, courtId, date }: { actor:string; courtId:stri
     pending.current=true;setOperation('create');setMessage('');setResult('');
     try {
       const request=intent??readMaintenanceIntent({actor,court:courtId,date,time,duration,reason,key:randomUUID()},actor);
-      await sessionStorage.setItem(storageKey,JSON.stringify(request));
+      try {
+        await sessionStorage.setItem(storageKey,JSON.stringify(request));
+      } catch {
+        if (mounted.current) setMessage('No pudimos guardar la referencia en este dispositivo. Revisa el almacenamiento y vuelve a intentarlo.');
+        return;
+      }
       if(!mounted.current)return;setIntent(request);
       const row=await createMaintenance(request);
       if(!mounted.current)return;
@@ -76,7 +81,7 @@ function MaintenancePanel({ actor, courtId, date }: { actor:string; courtId:stri
     pending.current=true;setOperation(cancelId);setMessage('');setResult('');
     try {
       await cancelMaintenance(actor,courtId,cancelId,cancelReason);
-      if(mounted.current){setResult('Cancelación comprobada. El horario queda liberado.');setCancelId('');setCancelReason('');}
+      if(mounted.current){setResult('Mantenimiento cancelado. Actualiza la agenda para consultar la disponibilidad.');setCancelId('');setCancelReason('');}
     } catch {if(mounted.current)setMessage('No pudimos comprobar la cancelación. Actualiza o reintenta; consultaremos primero su estado.');}
     finally {pending.current=false;if(mounted.current){setOperation('');setRevision(v=>v+1);}}
   }

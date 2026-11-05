@@ -167,6 +167,10 @@ class AgendaTests(unittest.TestCase):
         self.assertIn('reservation_unavailable', sql(f"select public.transition_reservation('{block['id']}','cancelled','Ajeno');", actor=OUTSIDER, ok=False))
         self.assertIn('invalid_transition', sql(f"select public.transition_reservation('{block['id']}','cancelled',' ');", actor=OWNER, ok=False))
         self.assertIn('exclusion constraint', create(2, ok=False))
+        # A former manager still owns the row as its creator. Membership is required
+        # by the RPC itself even when called directly with the original actor's JWT.
+        revoked = sql(f"begin; delete from public.venue_members where user_id='{OWNER}'; set local role authenticated; set local request.jwt.claim.sub='{OWNER}'; select public.transition_reservation('{block['id']}','cancelled','Sin acceso'); rollback;", ok=False)
+        self.assertIn('reservation_unavailable', revoked)
         result = json.loads(sql(f"select row_to_json(r) from public.transition_reservation('{block['id']}','cancelled','Trabajo reprogramado') r;", actor=OWNER))
         self.assertEqual(result['status'], 'cancelled')
         self.assertEqual(sql(f"select reason from public.reservation_events where reservation_id='{block['id']}' and new_status='cancelled';", actor=OWNER), 'Trabajo reprogramado')
