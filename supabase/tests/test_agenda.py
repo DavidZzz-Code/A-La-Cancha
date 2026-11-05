@@ -157,6 +157,36 @@ class AgendaTests(unittest.TestCase):
         self.assertIn('invalid_slot',create(31,ok=False))
         self.assertIn('invalid_slot',create(-1,ok=False))
 
+    def test_maintenance_retry_cancel_audit_and_permissions(self):
+        key = str(uuid.uuid4())
+        block = json.loads(create(2, kind='block', actor=OWNER, key=key))
+        self.assertEqual(block['id'], json.loads(create(2, kind='block', actor=OWNER, key=key))['id'])
+        self.assertEqual((block['total'], block['deposit'], block['balance']), (0, 0, 0))
+        self.assertIn('owner_required', create(2, kind='block', actor=PLAYER, ok=False))
+        self.assertIn('owner_required', create(2, kind='block', actor=OUTSIDER, ok=False))
+        self.assertIn('reservation_unavailable', sql(f"select public.transition_reservation('{block['id']}','cancelled','Ajeno');", actor=OUTSIDER, ok=False))
+        self.assertIn('invalid_transition', sql(f"select public.transition_reservation('{block['id']}','cancelled',' ');", actor=OWNER, ok=False))
+        self.assertIn('exclusion constraint', create(2, ok=False))
+        # A former manager still owns the row as its creator. Membership is required
+        # by the RPC itself even when called directly with the original actor's JWT.
+        revoked = sql(f"begin; delete from public.venue_members where user_id='{OWNER}'; set local role authenticated; set local request.jwt.claim.sub='{OWNER}'; select public.transition_reservation('{block['id']}','cancelled','Sin acceso'); rollback;", ok=False)
+        self.assertIn('reservation_unavailable', revoked)
+        result = json.loads(sql(f"select row_to_json(r) from public.transition_reservation('{block['id']}','cancelled','Trabajo reprogramado') r;", actor=OWNER))
+        self.assertEqual(result['status'], 'cancelled')
+        self.assertEqual(sql(f"select reason from public.reservation_events where reservation_id='{block['id']}' and new_status='cancelled';", actor=OWNER), 'Trabajo reprogramado')
+        self.assertEqual(json.loads(create(2))['status'], 'held')
+
+    def test_maintenance_and_player_concurrent_requests_share_inventory(self):
+        barrier = threading.Barrier(2)
+        def attempt(kind):
+            barrier.wait(timeout=5)
+            try: return ('ok', json.loads(create(3, kind=kind, actor=OWNER if kind=='block' else PLAYER)))
+            except AssertionError as error: return ('rejected', str(error))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(attempt, ['block', 'player']))
+        self.assertEqual(sum(status=='ok' for status,_ in results), 1, results)
+        self.assertIn('exclusion constraint', next(value for status,value in results if status=='rejected'))
+
     def test_08_database_constraint_survives_rpc_bypass(self):
         reservation = json.loads(create(8))
         query = f"""insert into public.reservations(court_id,actor_id,kind,status,starts_at,ends_at,team,players,total,idempotency_key,base_price,discount,deposit,balance)

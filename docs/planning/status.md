@@ -28,3 +28,7 @@
 La prueba de Android fue confirmada por el usuario, no observada automáticamente. La validación de Expo Go no equivale a una distribución de producción. La auditoría de dependencias #27 y la reconciliación del historial siguen pendientes.
 
 - [Verificación de agenda del propietario](../engineering/owner-agenda-verification.md): alcance de lectura, pruebas y límites de la entrega de #8.
+
+## Avance del 5 de noviembre de 2026
+
+El PR #32 está integrado. El responsable confirmó en Android físico que pudo consultar la cancha DEMO y los tres movimientos del 5 de noviembre con la cuenta de encargado. La siguiente entrega de #8 implementa crear y cancelar mantenimientos puntuales, con motivos, permisos y reintentos. La validación física de estas escrituras queda pendiente.
