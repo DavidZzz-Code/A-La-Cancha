@@ -1,3 +1,4 @@
+import { PendingChanges } from './PendingChanges';
 import { Reschedule } from '../reschedule/Reschedule';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
@@ -20,6 +21,7 @@ export default function OwnerAgendaScreen() {
 }
 function OwnerPanel({ actor }: { actor: string }) {
   const router = useRouter();
+  const [decision,setDecision]=useState('');
   const [refresh, setRefresh] = useState(0), [courtId, setCourtId] = useState(''), [date, setDate] = useState(localDate);
   const [catalog, setCatalog] = useState<{ revision: number; courts: ManagedCourt[]; error: string }>({ revision: -1, courts: [], error: '' });
   const [agenda, setAgenda] = useState<{ key: string; rows: AgendaEntry[]; error: string; at: number }>({ key: '', rows: [], error: '', at: 0 });
@@ -45,6 +47,8 @@ function OwnerPanel({ actor }: { actor: string }) {
   return <View style={{ gap: 18, maxWidth: 900 }}>
     <Button secondary onPress={() => setRefresh(v => v + 1)}>Actualizar agenda del establecimiento</Button>
     {catalog.revision !== refresh ? <Label>Cargando establecimientos.</Label> : catalog.error ? <Label accessibilityRole="alert">{catalog.error}</Label> : !catalog.courts.length ? <Empty title="Sin canchas asignadas" message="Esta cuenta no tiene canchas para administrar. El responsable debe asignar el acceso al establecimiento."/> : <>
+      {!!decision && <Label accessibilityLiveRegion="polite">{decision}</Label>}
+      <PendingChanges actor={actor} courts={catalog.courts} onDecision={message=>{setDecision(message);setRefresh(v=>v+1);}}/>
       <View style={{ gap: 10 }}>{catalog.courts.map(c => <Chip key={c.id} active={courtId === c.id} onPress={() => setCourtId(c.id)}>{`${c.venue} · ${c.name}`}</Chip>)}</View>
       <DateStrip value={date} onChange={setDate}/>
       {court && <>
