@@ -29,3 +29,5 @@ En la agenda diaria, seleccionar una cancha y fecha y pulsar **Registrar turno p
 Si se interrumpe la respuesta, abrir la misma cancha y fecha en el dispositivo y pulsar **Comprobar turno presencial**. Se reutiliza la referencia persistida antes del envío. Al comprobar el registro se actualiza la agenda común.
 
 Para cancelar un turno presencial confirmado antes de su inicio, el encargado abre el movimiento en la agenda, indica el motivo y confirma. El servidor exige membresía vigente, conserva el registro cancelado y libera el intervalo para los jugadores.
+
+El encargado puede confirmar desde la agenda el bloqueo vigente de un jugador. El servidor comprueba membresía, estado y vencimiento al confirmar. El jugador consulta el resultado en Mis reservas → Ver mis reservas conectadas → Actualizar mis bloqueos.
