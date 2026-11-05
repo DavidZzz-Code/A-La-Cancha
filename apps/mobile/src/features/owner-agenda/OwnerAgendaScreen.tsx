@@ -15,6 +15,7 @@ export default function OwnerAgendaScreen() {
   </Page>;
 }
 function OwnerPanel({ actor }: { actor: string }) {
+  const router = useRouter();
   const [refresh, setRefresh] = useState(0), [courtId, setCourtId] = useState(''), [date, setDate] = useState(localDate);
   const [catalog, setCatalog] = useState<{ revision: number; courts: ManagedCourt[]; error: string }>({ revision: -1, courts: [], error: '' });
   const [agenda, setAgenda] = useState<{ key: string; rows: AgendaEntry[]; error: string; at: number }>({ key: '', rows: [], error: '', at: 0 });
@@ -43,6 +44,7 @@ function OwnerPanel({ actor }: { actor: string }) {
       <View style={{ gap: 10 }}>{catalog.courts.map(c => <Chip key={c.id} active={courtId === c.id} onPress={() => setCourtId(c.id)}>{`${c.venue} · ${c.name}`}</Chip>)}</View>
       <DateStrip value={date} onChange={setDate}/>
       {court && <>
+        <Button secondary onPress={() => router.push({pathname:'/owner-maintenance',params:{court:court.id,date}})}>Gestionar mantenimientos</Button>
         <Heading title={court.name} subtitle={`${date} · Hora de Colombia · ${court.published ? 'Publicada' : 'No publicada para jugadores'}`}/>
         {agenda.key !== key ? <Label>Consultando agenda del día.</Label> : agenda.error ? <Label accessibilityRole="alert">{agenda.error}</Label> : <>
           <Label>Última consulta: {colombiaTime(new Date(agenda.at).toISOString())}. Actualiza antes de coordinar un turno. Esta vista no confirma ni cobra reservas.</Label>
