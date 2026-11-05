@@ -1,6 +1,6 @@
 # Verificar la agenda
 
-Se necesitan PostgreSQL 17 con `btree_gist`, `psql` y Python 3. No se requieren paquetes Python.
+Se necesitan PostgreSQL 17 con `btree_gist` y `pg_cron` precargado (cron.database_name=alacancha_test), `psql` y Python 3. No se requieren paquetes Python.
 
 Crear una base **nueva y desechable** llamada `alacancha_test`; configurar `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` y `PGDATABASE=alacancha_test`, y ejecutar:
 

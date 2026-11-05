@@ -17,6 +17,6 @@ Pausar sin borrar historial: `select cron.alter_job((select jobid from cron.job 
 
 La migración 20261031201423_relocate_btree_gist.sql mueve la extensión existente a extensions sin recrear tablas ni índices. CI ejecuta la migración y las pruebas de exclusión/concurrencia.
 
-El archivo supabase/operations/enable_hold_expiry_schedule.sql reproduce la configuración operativa específica de Supabase. MCP la registró como 20261031201446_enable_hold_expiry_schedule. No forma parte de las migraciones portables de CI, cuya imagen no incluye pg_cron. Reconciliar también esta entrada al resolver #26 antes de db push; no marcarla como esquema pendiente por ejecutar.
+La programación está en supabase/migrations/20261031201446_enable_hold_expiry_schedule.sql y se prueba con pg_cron en la base desechable de CI.
 
 El trabajo acumula historial en cron.job_run_details. Revisar retención antes de producción. La ejecución en una base vacía comprueba el planificador, no sustituye las pruebas de expiración con reservas del laboratorio ni la validación de carga real.

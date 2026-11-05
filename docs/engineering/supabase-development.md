@@ -33,3 +33,9 @@ La app sigue siendo demo local. No hay cobros, usuarios de prueba creados ni res
 ## Actualización del 3 de noviembre
 
 La regresión de permisos está integrada (#23); btree_gist está en extensions y el cron está activo (#28). La app consulta catálogo/ocupación/precios por PostgREST (#30), con una cancha DEMO. Estas entregas resuelven los pendientes históricos correspondientes de arriba. La reconciliación del historial sigue pendiente: no ejecutar db push sin resolver #26. La escritura desde la app y JWT reales se siguen en [la entrega de bloqueos](remote-reservations-verification.md).
+
+## Verificación del 5 de noviembre (#26)
+
+Los siete nombres y versiones en `supabase/migrations` corresponden a los siete registros del historial en desarrollo. Se comparó también el SQL registrado, normalizando saltos de línea y delimitadores finales. Se alinearon los archivos con los identificadores existentes. No se modificó el historial remoto. Esta verificación reemplaza las advertencias históricas de discrepancia anteriores.
+
+El CI prepara una base PostgreSQL 17 desechable con pg_cron y aplica las migraciones en orden, incluida la programación del vencimiento. El juego de datos sintético introducido tras la primera migración comprueba también la actualización de reservas previas. Antes de un despliegue futuro, verificar de nuevo que la lista local/remota coincide y revisar el resultado de `supabase db push --dry-run` sobre el proyecto correcto.
