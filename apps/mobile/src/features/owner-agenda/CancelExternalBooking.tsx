@@ -4,12 +4,12 @@ import { Button, Label } from '../../components/ui';
 import { supabase } from '../auth/client';
 import { type AgendaEntry } from './contracts';
 
-export function CancelExternalBooking({ actor, row, onSaved }: { actor: string; row: AgendaEntry; onSaved: () => void }) {
+export function CancelExternalBooking({ actor, row, checkedAt, onSaved }: { actor: string; row: AgendaEntry; checkedAt: number; onSaved: () => void }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  if (row.kind !== 'external' || row.status !== 'confirmed' || Date.parse(row.starts_at) <= Date.now()) return null;
+  if (row.kind !== 'external' || row.status !== 'confirmed' || Date.parse(row.starts_at) <= checkedAt) return null;
   async function cancel() {
     if (!supabase || busy || !reason.trim()) return;
     setBusy(true);
