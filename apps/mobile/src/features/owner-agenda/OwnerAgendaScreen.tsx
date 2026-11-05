@@ -7,6 +7,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { supabase } from '../auth/client';
 import { fetchManagedCourts, fetchOwnerDay } from './api';
 import { CancelExternalBooking } from './CancelExternalBooking';
+import { ConfirmPlayerHold } from './ConfirmPlayerHold';
 import { ExternalBooking } from './ExternalBooking';
 import { colombiaTime, dailySlots, kindLabels, statusLabels, type AgendaEntry, type ManagedCourt } from './contracts';
 
@@ -49,7 +50,7 @@ function OwnerPanel({ actor }: { actor: string }) {
         <Button secondary onPress={() => router.push({pathname:'/owner-maintenance',params:{court:court.id,date}})}>Gestionar mantenimientos</Button>
         <Heading title={court.name} subtitle={`${date} · Hora de Colombia · ${court.published ? 'Publicada' : 'No publicada para jugadores'}`}/>
         {agenda.key !== key ? <Label>Consultando agenda del día.</Label> : agenda.error ? <Label accessibilityRole="alert">{agenda.error}</Label> : <>
-          <Label>Última consulta: {colombiaTime(new Date(agenda.at).toISOString())}. Actualiza antes de coordinar un turno. Esta vista no confirma ni cobra reservas.</Label>
+          <Label>Última consulta: {colombiaTime(new Date(agenda.at).toISOString())}. Actualiza antes de coordinar un turno. Puedes confirmar bloqueos vigentes de jugadores.</Label>
           <Label accessibilityRole="header">Disponibilidad por intervalos de 30 minutos</Label>
           <ExternalBooking key={key} actor={actor} court={court} date={date} rows={agenda.rows} checkedAt={agenda.at} onSaved={() => setRefresh(v => v + 1)}/>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{dailySlots(court, date, agenda.rows, agenda.at).map(slot => <View key={slot.time} style={{ padding: 12, borderRadius: 12, backgroundColor: slot.label === 'Ocupado' ? '#F3E6D5' : '#EAF1E6' }}><Label>{slot.time} · {slot.label}</Label></View>)}</View>
@@ -59,6 +60,7 @@ function OwnerPanel({ actor }: { actor: string }) {
             <Label style={{ fontWeight: 'bold' }}>{colombiaTime(row.starts_at)}–{colombiaTime(row.ends_at)} · {row.team}</Label>
             <Label>{kindLabels[row.kind]} · {statusLabels[row.status]}</Label>
             {row.kind !== 'block' && <Label>{row.players} jugadores</Label>}
+            <ConfirmPlayerHold actor={actor} row={row} checkedAt={agenda.at} onSaved={() => setRefresh(v => v + 1)}/>
             <CancelExternalBooking actor={actor} row={row} checkedAt={agenda.at} onSaved={() => setRefresh(v => v + 1)}/>
             {row.status === 'held' && <Label>{Date.parse(row.expires_at!) <= agenda.at ? 'Plazo agotado; pendiente de actualización del servidor. El intervalo sigue marcado como ocupado.' : `Vence a las ${colombiaTime(row.expires_at!)}. Todavía no es una reserva confirmada.`}</Label>}
           </View>)}

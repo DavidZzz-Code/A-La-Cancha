@@ -3,9 +3,9 @@ const actor = '00000000-0000-0000-0000-000000000003';
 const venue = '10000000-0000-0000-0000-000000000001';
 const court = '20000000-0000-0000-0000-000000000001';
 const second = '20000000-0000-0000-0000-000000000002';
-async function fixture(page: Page, options: { noAccess?: boolean; failure?: boolean; truncated?: boolean; presencial?: 'retry' | 'conflict' } = {}) {
+async function fixture(page: Page, options: { confirm?: boolean; noAccess?: boolean; failure?: boolean; truncated?: boolean; presencial?: 'retry' | 'conflict' } = {}) {
   let booking: Record<string, unknown> | undefined;
-  let revoked = false, reads = 0, writes = 0;
+  let confirmed = false, revoked = false, reads = 0, writes = 0;
   const encode = (v: unknown) => Buffer.from(JSON.stringify(v)).toString('base64url');
   const user = { id: actor, email: 'owner@example.test', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} };
   const access_token = encode({ alg: 'HS256', typ: 'JWT' }) + '.' + encode({ sub: actor, exp: Math.floor(Date.now()/1000)+3600 }) + '.fixture';
@@ -13,6 +13,12 @@ async function fixture(page: Page, options: { noAccess?: boolean; failure?: bool
     const url = new URL(route.request().url());
     if (url.pathname.endsWith('/token')) return route.fulfill({ json: { user, access_token, refresh_token: 'fixture', expires_in: 3600, token_type: 'bearer' } });
     if (url.pathname.endsWith('/logout')) return route.fulfill({ status: 204 });
+    if (options.confirm && url.pathname.endsWith('/transition_reservation')) {
+      expect(route.request().postDataJSON()).toEqual({p_id:'30000000-0000-0000-0000-000000000001',p_status:'confirmed'});
+      confirmed = true;
+      writes++;
+      return route.fulfill({json:{id:'30000000-0000-0000-0000-000000000001',kind:'player',status:'confirmed'}});
+    }
     if (options.presencial && url.pathname.endsWith('/create_reservation')) {
       writes++;
       const data = route.request().postDataJSON();
@@ -49,7 +55,7 @@ async function fixture(page: Page, options: { noAccess?: boolean; failure?: bool
       const date = url.searchParams.get('ends_at')!.slice(3,13);
       const base = {court_id:court,starts_at:date+'T07:00:00-05:00',ends_at:date+'T08:00:00-05:00',expires_at:null,team:'Equipo de la app',players:10};
       return respond([
-        {...base,id:'30000000-0000-0000-0000-000000000001',kind:'player',status:'held',expires_at:'2020-01-01T00:00:00Z'},
+        {...base,id:'30000000-0000-0000-0000-000000000001',kind:'player',status:confirmed?'confirmed':'held',expires_at:options.confirm?new Date(Date.now()+600000).toISOString():'2020-01-01T00:00:00Z'},
         {...base,id:'30000000-0000-0000-0000-000000000002',kind:'external',status:'cancelled',team:'Registro anterior'},
         {...base,id:'30000000-0000-0000-0000-000000000003',kind:'block',status:'confirmed',team:'Mantenimiento',starts_at:date+'T09:00:00-05:00',ends_at:date+'T09:30:00-05:00'},
         ...(booking && String(booking.starts_at).startsWith(date) ? [booking] : []),
@@ -67,6 +73,14 @@ async function fixture(page: Page, options: { noAccess?: boolean; failure?: bool
 }
 test.describe('Agenda del propietario con API simulada', () => {
   test.skip(process.env.AUTH_E2E !== '1', 'Requiere configuración de prueba.');
+  test('confirma un bloqueo vigente desde la agenda', async ({page}) => {
+    const api = await fixture(page, {confirm:true});
+    await page.getByRole('button',{name:'Mañana',exact:true}).click();
+    await page.getByRole('button',{name:'Confirmar reserva del jugador'}).click();
+    await expect(page.getByText('Reserva de la app · Confirmada',{exact:true})).toBeVisible();
+    await expect(page.getByRole('button',{name:'Confirmar reserva del jugador'})).toHaveCount(0);
+    expect(api.writes()).toBe(1);
+  });
   test('consulta por cancha y fecha, distingue estados sin realizar escrituras', async ({page}, info) => {
     const api = await fixture(page);
     await expect(page.getByText('07:00 · Ocupado',{exact:true})).toBeVisible();
