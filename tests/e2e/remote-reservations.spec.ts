@@ -7,6 +7,7 @@ function token(userId:string) {
   return encode({alg:'HS256',typ:'JWT'})+'.'+encode({sub:userId,aud:'authenticated',role:'authenticated',exp:Math.floor(Date.now()/1000)+3600})+'.test-signature';
 }
 async function fixture(page:Page, options:{lostCreate?:boolean;conflict?:boolean;lostCancel?:boolean;expired?:boolean}={}) {
+  let decision: "approved"|"rejected"|undefined;
   let row:Record<string,unknown>|null=null;let creates=0;let cancels=0;let lost=false;let cancellationLost=false;
   const user={id:actor,aud:'authenticated',role:'authenticated',email:'player@example.test',app_metadata:{},user_metadata:{},created_at:new Date().toISOString()};
   await page.route('https://auth-test.supabase.co/**',async route=>{
@@ -20,6 +21,12 @@ async function fixture(page:Page, options:{lostCreate?:boolean;conflict?:boolean
       const match=row && (!url.searchParams.has('idempotency_key') || url.searchParams.get('idempotency_key')==='eq.'+row.idempotency_key);
       // maybeSingle uses an array representation for GET.
       if(route.request().headers().accept?.includes('vnd.pgrst.object'))return route.fulfill({json:match?row:null});
+      if(!single && row && decision) {
+        expect(url.searchParams.get('reschedule_requests.limit')).toBe('1');
+        expect(url.searchParams.get('reschedule_requests.status')).toBe('neq.pending');
+        expect(url.searchParams.get('reschedule_requests.order')).toMatch(/^decided_at.desc/);
+        return route.fulfill({json:[{...row,kind:'player',status:'confirmed',reschedule_requests:[{status:decision}]}]});
+      }
       return route.fulfill({json:match?[row]:single?[]:row?[row]:[]});
     }
     if(url.pathname.endsWith('/create_reservation')) {
@@ -49,7 +56,7 @@ async function fixture(page:Page, options:{lostCreate?:boolean;conflict?:boolean
   const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
   await page.goto('/remote-reservations?court='+court+'&date='+date+'&time=08%3A00&duration=60');
   await page.getByLabel('Nombre del equipo conectado').fill('Equipo conectado');
-  return {creates:()=>creates,cancels:()=>cancels};
+  return {creates:()=>creates,cancels:()=>cancels,decide:(status:'approved'|'rejected')=>{decision=status;}};
 }
 test.describe('Bloqueos autenticados con API simulada',()=>{
   test.skip(process.env.AUTH_E2E!=='1','Requiere configuración de prueba.');
@@ -66,6 +73,16 @@ test.describe('Bloqueos autenticados con API simulada',()=>{
     await page.getByRole('button',{name:'Cancelar bloqueo'}).click();
     await expect(page.getByText('Cancelada',{exact:true}).first()).toBeVisible();
     expect(calls.creates()).toBe(1);expect(calls.cancels()).toBe(1);
+  });
+  test('muestra la última decisión en la tarjeta al actualizar',async({page})=>{
+    const api=await fixture(page);
+    await page.getByRole('button',{name:'Crear bloqueo de 10 minutos'}).click();
+    await expect(page.getByRole('button',{name:'Cancelar bloqueo'})).toBeVisible();
+    for(const [status,label] of [['approved','Cambio aprobado'],['rejected','Cambio rechazado']] as const) {
+      api.decide(status);
+      await page.getByRole('button',{name:'Actualizar mis bloqueos'}).click();
+      await expect(page.getByText('Última decisión: '+label,{exact:true})).toBeVisible();
+    }
   });
   test('recupera respuesta perdida tras recargar sin segunda creación',async({page})=>{
     const calls=await fixture(page,{lostCreate:true});

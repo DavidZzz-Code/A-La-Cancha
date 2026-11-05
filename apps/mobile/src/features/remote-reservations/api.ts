@@ -9,7 +9,12 @@ async function client(actor: string) {
 }
 export async function fetchReservations(actor: string, signal: AbortSignal) {
   const db = await client(actor);
-  const {data,error} = await db.from('reservations').select(columns).eq('actor_id',actor).order('created_at',{ascending:false}).limit(50).abortSignal(signal);
+  const {data,error} = await db.from('reservations').select(columns+',reschedule_requests(status)')
+    .eq('actor_id',actor).neq('reschedule_requests.status','pending')
+    .order('decided_at',{referencedTable:'reschedule_requests',ascending:false})
+    .order('id',{referencedTable:'reschedule_requests',ascending:false})
+    .limit(1,{referencedTable:'reschedule_requests'})
+    .order('created_at',{ascending:false}).limit(50).abortSignal(signal);
   if (error) throw error;
   return (data ?? []).map(row=>readReservation(row,actor));
 }

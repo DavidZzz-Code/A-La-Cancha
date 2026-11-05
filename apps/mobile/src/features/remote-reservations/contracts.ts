@@ -1,7 +1,9 @@
 import { validDate } from '@alacancha/domain';
 export type Selection = { court: string; date: string; time: string; duration: number };
 export type HoldIntent = Selection & { key: string; actor: string; team: string; players: number };
+export const decisionLabels = {approved:'Cambio aprobado',rejected:'Cambio rechazado',unavailable:'Cambio de horario no disponible'};
 export type RemoteReservation = {
+  reschedule_requests?: {status:keyof typeof decisionLabels}[];
   kind?: 'player'|'external'|'block'; id: string; actor_id: string; court_id: string; idempotency_key: string;
   status: 'held' | 'confirmed' | 'completed' | 'cancelled' | 'expired';
   starts_at: string; ends_at: string; expires_at: string | null;
@@ -33,6 +35,8 @@ export function readReservation(value: unknown, actor: string): RemoteReservatio
   if (r.status === 'held' && !r.expires_at) throw Error('Vencimiento ausente.');
   for (const key of ['total','discount','deposit','balance','players']) if (!Number.isSafeInteger(r[key]) || Number(r[key]) < 0) throw Error('Importe inválido.');
   if (Number(r.total) !== Number(r.deposit) + Number(r.balance) || Number(r.players)<1 || Number(r.players)>30 || typeof r.team !== 'string') throw Error('Reserva inconsistente.');
+  if (r.reschedule_requests !== undefined && (!Array.isArray(r.reschedule_requests) || r.reschedule_requests.length>1 ||
+    r.reschedule_requests.some(item=>!item || !Object.hasOwn(decisionLabels,item.status)))) throw Error('Decisión de cambio inválida.');
   return r as RemoteReservation;
 }
 export function reservationStatus(row: RemoteReservation, now: number): string {
