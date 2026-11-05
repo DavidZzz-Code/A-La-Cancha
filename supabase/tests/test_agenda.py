@@ -167,7 +167,8 @@ class AgendaTests(unittest.TestCase):
         moved = json.loads(sql(f"select row_to_json(r) from public.reservations r where id='{rid}';", actor=PLAYER))
         self.assertEqual(moved['starts_at'],blocker['starts_at'])
         self.assertEqual(moved['ends_at'],blocker['ends_at'])
-        for field in ('id','status','total','deposit','balance'):
+        self.assertEqual(moved['status'],'confirmed')
+        for field in ('id','total','deposit','balance'):
             self.assertEqual(moved[field],original[field])
         self.assertEqual(json.loads(create(4))['status'],'held')
 
