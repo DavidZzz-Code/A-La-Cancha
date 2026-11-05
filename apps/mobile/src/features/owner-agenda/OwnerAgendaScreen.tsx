@@ -6,6 +6,7 @@ import { Button, Chip, DateStrip, Empty, Heading, Label, Page } from '../../comp
 import { useAuth } from '../auth/AuthProvider';
 import { supabase } from '../auth/client';
 import { fetchManagedCourts, fetchOwnerDay } from './api';
+import { CancelExternalBooking } from './CancelExternalBooking';
 import { ExternalBooking } from './ExternalBooking';
 import { colombiaTime, dailySlots, kindLabels, statusLabels, type AgendaEntry, type ManagedCourt } from './contracts';
 
@@ -58,6 +59,7 @@ function OwnerPanel({ actor }: { actor: string }) {
             <Label style={{ fontWeight: 'bold' }}>{colombiaTime(row.starts_at)}–{colombiaTime(row.ends_at)} · {row.team}</Label>
             <Label>{kindLabels[row.kind]} · {statusLabels[row.status]}</Label>
             {row.kind !== 'block' && <Label>{row.players} jugadores</Label>}
+            <CancelExternalBooking actor={actor} row={row} checkedAt={agenda.at} onSaved={() => setRefresh(v => v + 1)}/>
             {row.status === 'held' && <Label>{Date.parse(row.expires_at!) <= agenda.at ? 'Plazo agotado; pendiente de actualización del servidor. El intervalo sigue marcado como ocupado.' : `Vence a las ${colombiaTime(row.expires_at!)}. Todavía no es una reserva confirmada.`}</Label>}
           </View>)}
         </>}
