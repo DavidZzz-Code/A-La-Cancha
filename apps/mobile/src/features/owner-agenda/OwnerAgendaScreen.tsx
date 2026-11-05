@@ -6,6 +6,7 @@ import { Button, Chip, DateStrip, Empty, Heading, Label, Page } from '../../comp
 import { useAuth } from '../auth/AuthProvider';
 import { supabase } from '../auth/client';
 import { fetchManagedCourts, fetchOwnerDay } from './api';
+import { ExternalBooking } from './ExternalBooking';
 import { colombiaTime, dailySlots, kindLabels, statusLabels, type AgendaEntry, type ManagedCourt } from './contracts';
 
 export default function OwnerAgendaScreen() {
@@ -49,6 +50,7 @@ function OwnerPanel({ actor }: { actor: string }) {
         {agenda.key !== key ? <Label>Consultando agenda del día.</Label> : agenda.error ? <Label accessibilityRole="alert">{agenda.error}</Label> : <>
           <Label>Última consulta: {colombiaTime(new Date(agenda.at).toISOString())}. Actualiza antes de coordinar un turno. Esta vista no confirma ni cobra reservas.</Label>
           <Label accessibilityRole="header">Disponibilidad por intervalos de 30 minutos</Label>
+          <ExternalBooking key={key} actor={actor} court={court} date={date} rows={agenda.rows} checkedAt={agenda.at} onSaved={() => setRefresh(v => v + 1)}/>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{dailySlots(court, date, agenda.rows, agenda.at).map(slot => <View key={slot.time} style={{ padding: 12, borderRadius: 12, backgroundColor: slot.label === 'Ocupado' ? '#F3E6D5' : '#EAF1E6' }}><Label>{slot.time} · {slot.label}</Label></View>)}</View>
           <Label accessibilityRole="header">Reservas y movimientos del día ({agenda.rows.length})</Label>
           {!agenda.rows.length && <Label>No hay reservas registradas para esta cancha y fecha.</Label>}
