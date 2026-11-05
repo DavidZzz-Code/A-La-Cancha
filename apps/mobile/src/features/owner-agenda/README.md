@@ -21,3 +21,9 @@ La operación existente del servidor crea un registro de tipo `block` con import
 Para verificar en Android, crear un mantenimiento en una cancha DEMO, actualizar la agenda de jugador y verificar que desaparece el horario. Cancelar desde el panel, actualizar otra vez y comprobar que el turno vuelve a estar disponible. Registrar el resultado por separado de la prueba de consulta de #32.
 
 La migración `20261105122311_require_current_membership_for_maintenance.sql` exige membresía vigente en el servidor para toda transición de un bloqueo operativo, incluido el que registró el propio encargado antes de perder acceso.
+
+## Turnos presenciales
+
+En la agenda diaria, seleccionar una cancha y fecha y pulsar **Registrar turno presencial**. El encargado indica equipo, jugadores, duración y hora. Solo se ofrecen intervalos libres durante toda la duración consultada. El servidor comprueba nuevamente membresía, capacidad y solapamientos, guarda una reserva de tipo `external` y devuelve el precio calculado. Registrar el turno no procesa un cobro.
+
+Si se interrumpe la respuesta, abrir la misma cancha y fecha en el dispositivo y pulsar **Comprobar turno presencial**. Se reutiliza la referencia persistida antes del envío. Al comprobar el registro se actualiza la agenda común.
