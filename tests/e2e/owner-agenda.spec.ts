@@ -3,7 +3,8 @@ const actor = '00000000-0000-0000-0000-000000000003';
 const venue = '10000000-0000-0000-0000-000000000001';
 const court = '20000000-0000-0000-0000-000000000001';
 const second = '20000000-0000-0000-0000-000000000002';
-async function fixture(page: Page, options: { confirm?: boolean; noAccess?: boolean; failure?: boolean; truncated?: boolean; presencial?: 'retry' | 'conflict' } = {}) {
+async function fixture(page: Page, options: { pending?: boolean; confirm?: boolean; noAccess?: boolean; failure?: boolean; truncated?: boolean; presencial?: 'retry' | 'conflict' } = {}) {
+  let pending=options.pending;
   let booking: Record<string, unknown> | undefined;
   let confirmed = false, revoked = false, reads = 0, writes = 0;
   const encode = (v: unknown) => Buffer.from(JSON.stringify(v)).toString('base64url');
@@ -13,6 +14,12 @@ async function fixture(page: Page, options: { confirm?: boolean; noAccess?: bool
     const url = new URL(route.request().url());
     if (url.pathname.endsWith('/token')) return route.fulfill({ json: { user, access_token, refresh_token: 'fixture', expires_in: 3600, token_type: 'bearer' } });
     if (url.pathname.endsWith('/logout')) return route.fulfill({ status: 204 });
+    if (options.pending && url.pathname.endsWith('/decide_reschedule')) {
+      expect(route.request().postDataJSON()).toEqual({p_key:'change-test',p_accept:true});
+      pending=false;
+      writes++;
+      return route.fulfill({json:{id:'change-test',status:'approved'}});
+    }
     if (options.confirm && url.pathname.endsWith('/transition_reservation')) {
       expect(route.request().postDataJSON()).toEqual({p_id:'30000000-0000-0000-0000-000000000001',p_status:'confirmed'});
       confirmed = true;
@@ -36,6 +43,11 @@ async function fixture(page: Page, options: { confirm?: boolean; noAccess?: bool
     }
     if (route.request().method() !== 'GET') { writes++; return route.abort(); }
     const respond = (json: unknown[], count = json.length) => route.fulfill({ json, headers: { 'content-range': `${json.length ? '0-'+(json.length-1) : '*'}/${count}`, 'access-control-expose-headers': 'content-range' } });
+    if (url.pathname.endsWith('/reschedule_requests')) {
+      expect(url.searchParams.get('status')).toBe('eq.pending');
+      expect(url.searchParams.get('reservations.court_id')).toBe('in.('+court+','+second+')');
+      return respond(pending?[{id:'change-test',original_start:'2027-01-12T19:00:00-05:00',proposed_start:'2027-01-13T20:00:00-05:00',reservations:{court_id:second,team:'Equipo visitante'}}]:[]);
+    }
     if (url.pathname.endsWith('/venue_members')) {
       expect(url.searchParams.get('user_id')).toBe('eq.'+actor);
       return respond(revoked || options.noAccess ? [] : [{ venue_id: venue, user_id: actor }]);
@@ -73,6 +85,14 @@ async function fixture(page: Page, options: { confirm?: boolean; noAccess?: bool
 }
 test.describe('Agenda del propietario con API simulada', () => {
   test.skip(process.env.AUTH_E2E !== '1', 'Requiere configuración de prueba.');
+  test('resuelve una solicitud de otra cancha desde la agenda inicial', async ({page})=>{
+    const api=await fixture(page,{pending:true});
+    await expect(page.getByText('Equipo visitante · Sede DEMO · Cancha 2')).toBeVisible();
+    await page.getByRole('button',{name:'Aprobar solicitud'}).click();
+    await expect(page.getByText('Cambio aprobado.',{exact:true})).toBeVisible();
+    await expect(page.getByText('No hay solicitudes pendientes.')).toBeVisible();
+    expect(api.writes()).toBe(1);
+  });
   test('confirma un bloqueo vigente desde la agenda', async ({page}) => {
     const api = await fixture(page, {confirm:true});
     await page.getByRole('button',{name:'Mañana',exact:true}).click();

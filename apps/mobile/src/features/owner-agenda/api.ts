@@ -29,3 +29,26 @@ export async function fetchOwnerDay(actor: string, court: ManagedCourt, date: st
   if (rows.error) throw rows.error;
   return readEntries(completeRows(rows.data, rows.count, 200), court.id, date);
 }
+
+type PendingChange = {id:string; original_start:string; proposed_start:string; reservations:{court_id:string; team:string}};
+export async function fetchPendingChanges(actor:string, courts:ManagedCourt[], page:number, signal:AbortSignal) {
+  const db=await client(actor);
+  const start=page*10;
+  const result=await db.from('reschedule_requests')
+    .select('id,original_start,proposed_start,reservations!inner(court_id,team)',{count:'exact'})
+    .eq('status','pending').in('reservations.court_id',courts.map(court=>court.id))
+    .order('created_at').order('id').range(start,start+9).abortSignal(signal);
+  if(result.error || result.count===null) throw Error('Consulta incompleta.');
+  const rows=result.data as unknown as PendingChange[];
+  if(!Array.isArray(rows) || rows.some(row=>!courts.some(court=>court.id===row.reservations?.court_id)
+    || !row.id || !row.reservations.team || !Number.isFinite(Date.parse(row.original_start)) || !Number.isFinite(Date.parse(row.proposed_start)))) throw Error('Solicitud inválida.');
+  return {rows,total:result.count};
+}
+
+export async function decidePendingChange(actor:string,id:string,accept:boolean) {
+  const db=await client(actor);
+  const {data,error}=await db.rpc('decide_reschedule',{p_key:id,p_accept:accept}).single();
+  const changed=data as {id:string;status:string}|null;
+  if(error || changed?.id!==id || !['approved','rejected','unavailable'].includes(changed.status)) throw Error('Decisión sin verificar.');
+  return changed.status;
+}

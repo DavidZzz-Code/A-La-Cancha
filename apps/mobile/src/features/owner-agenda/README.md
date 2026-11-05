@@ -37,3 +37,5 @@ El encargado puede confirmar desde la agenda el bloqueo vigente de un jugador. E
 El jugador abre una reserva confirmada desde Mis reservas → Ver mis reservas conectadas, solicita un horario libre y mantiene su turno original. En la agenda del día original el encargado abre Revisar cambios de horario. Puede aprobar o rechazar. El servidor vuelve a consultar precio y disponibilidad antes de mover la misma reserva. Una solicitud pendiente no ocupa el horario propuesto. El historial muestra la decisión y ambas fechas en hora colombiana.
 
 Prueba Android: solicitar con la cuenta del jugador, revisar con la cuenta del encargado y actualizar la lista del jugador. Repetir ocupando antes el destino con otro equipo: debe figurar Horario no disponible y conservarse la reserva original.
+
+Al abrir o actualizar la agenda, el encargado ve las solicitudes pendientes de todas sus canchas, ordenadas por llegada. Puede aprobar o rechazar desde esa lista aunque consulte otra cancha o fecha. La lista muestra diez solicitudes por página.
