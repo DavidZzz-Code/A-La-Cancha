@@ -19,3 +19,7 @@ Desde la raíz del repositorio con Node 24, ejecutar `npm ci` y entrar a `apps/m
 3. Ejecutar `npx eas-cli build --platform android --profile preview`. En la primera ejecución, usar las credenciales Android administradas por Expo del proyecto.
 4. Tras la compilación, abrir el enlace de instalación desde el teléfono. Compartirlo únicamente con participantes autorizados.
 5. Cerrar Expo Go, apagar el PC y abrir A La Cancha desde su ícono con datos móviles. Iniciar sesión y consultar las reservas conectadas. Registrar versión, dispositivo y resultado.
+
+Inicio por cuenta: al entrar o restaurar la sesión, un miembro del establecimiento accede a la agenda del día y sus solicitudes. El jugador ve su siguiente reserva confirmada, Buscar cancha y Mis reservas conectadas. Jugar permite consultar la disponibilidad desde la agenda del encargado.
+
+En la versión conectada, el inicio ofrece entrar, crear una cuenta por correo o consultar canchas como invitado. Si el servidor requiere confirmar la dirección, la app indica volver a iniciar sesión después de verificar el correo. El registro crea una cuenta de jugador. Los permisos de establecimiento provienen de sus membresías.

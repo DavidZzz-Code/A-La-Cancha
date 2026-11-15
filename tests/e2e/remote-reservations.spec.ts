@@ -51,7 +51,7 @@ async function fixture(page:Page, options:{lostCreate?:boolean;conflict?:boolean
   await page.goto('/profile');
   await page.getByLabel('Correo de la cuenta').fill(user.email);
   await page.getByLabel('Contraseña de la cuenta').fill('fixture-password');
-  await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click();
+  await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click(); await page.waitForURL(url=>url.pathname!=='/profile'); await page.goto('/profile');
   await expect(page.getByText('Sesión iniciada: '+user.email)).toBeVisible();
   const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
   await page.goto('/remote-reservations?court='+court+'&date='+date+'&time=08%3A00&duration=60');

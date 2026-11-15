@@ -2,7 +2,7 @@
   "expo": {
     "name": "A La Cancha",
     "slug": "a-la-cancha",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "scheme": "alacancha",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -11,6 +11,7 @@
       "supportsTablet": true
     },
     "android": {
+      "versionCode": 3,
       "package": "com.alacancha.app"
     },
     "web": {
