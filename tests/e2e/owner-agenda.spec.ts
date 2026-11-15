@@ -79,8 +79,12 @@ async function fixture(page: Page, options: { pending?: boolean; confirm?: boole
   await page.getByLabel('Correo de la cuenta').fill(user.email);
   await page.getByLabel('Contraseña de la cuenta').fill('fixture-password');
   await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click();
-  await expect(page.getByText('Sesión iniciada: '+user.email)).toBeVisible();
-  await page.getByRole('button',{name:'Agenda de mi establecimiento'}).click();
+  if (options.noAccess) {
+    await page.waitForURL(url=>url.pathname!=='/profile');
+    await page.goto('/owner-agenda');
+  } else {
+    await expect(page).toHaveURL(/owner-agenda/);
+  }
   return { revoke: () => { revoked=true; }, reads: () => reads, writes: () => writes };
 }
 test.describe('Agenda del propietario con API simulada', () => {

@@ -17,7 +17,7 @@ export function AccountPanel() {
     try {
       const result = action === 'signOut' ? await supabase.auth.signOut() : await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (result.error) setMessage(action === 'signOut' ? 'No pudimos cerrar sesión. Revisa tu conexión e inténtalo de nuevo.' : 'No pudimos iniciar sesión. Revisa tus datos y tu conexión.');
-      else setPassword('');
+      else { setPassword(''); if(action==='signIn')router.replace('/'); }
     } catch { setMessage('No pudimos conectar. Inténtalo de nuevo.'); }
     finally { pending.current = false; setBusy(false); }
   }

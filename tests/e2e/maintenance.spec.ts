@@ -40,7 +40,7 @@ async function fixture(page:Page, options:{lostCreate?:boolean;lostCancel?:boole
   });
   await page.goto('/profile');
   await page.getByLabel('Correo de la cuenta').fill(user.email);await page.getByLabel('Contraseña de la cuenta').fill('fixture-password');
-  await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click();await expect(page.getByText('Sesión iniciada: '+user.email)).toBeVisible();
+  await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click(); await page.waitForURL(url=>url.pathname!=='/profile'); await page.goto('/profile');await expect(page.getByText('Sesión iniciada: '+user.email)).toBeVisible();
   await page.goto(`/owner-maintenance?court=${court}&date=${date}`);
   return {creates:()=>creates,cancels:()=>cancels};
 }

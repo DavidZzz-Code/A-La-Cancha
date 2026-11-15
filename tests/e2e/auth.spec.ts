@@ -14,6 +14,8 @@ test.describe('Cuenta de desarrollo con API simulada', () => {
         if (attempts === 1) return route.fulfill({ status: 400, json: { error_code: 'invalid_credentials', msg: 'Invalid login credentials' } });
         return route.fulfill({ json: { access_token: token, refresh_token: 'test-refresh-token', token_type: 'bearer', expires_in: 3600, user } });
       }
+      if (url.pathname.endsWith('/venue_members')) return route.fulfill({json:[]});
+      if (url.pathname.endsWith('/reservations')) return route.fulfill({json:[{team:'Equipo del sábado',starts_at:'2027-05-01T20:00:00Z',courts:{name:'Cancha norte'}}]});
       if (url.pathname.endsWith('/logout')) return route.fulfill({ status: 204 });
       if (url.pathname.endsWith('/user')) return route.fulfill({ json: user });
       return route.abort();
@@ -23,7 +25,8 @@ test.describe('Cuenta de desarrollo con API simulada', () => {
     await page.getByLabel('Contraseña de la cuenta').fill('test-password-only');
     await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
     await expect(page.getByRole('alert')).toContainText('No pudimos iniciar sesión');
-    await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
+    await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click(); await expect(page.getByText('Equipo del sábado · Cancha norte')).toBeVisible();
+    await page.getByRole('link',{name:'Mi cuenta'}).click();
     await expect(page.getByText('Sesión iniciada: '+user.email)).toBeVisible();
     expect(await page.evaluate(() => JSON.stringify(window.sessionStorage))).not.toContain('test-password-only');
     await page.reload();
@@ -64,7 +67,7 @@ test('eventos entre pestañas no sustituyen la sesión almacenada', async ({ con
   for (const [tab,email] of [[page,'a@example.test'],[other,'b@example.test']] as const) {
     await tab.getByLabel('Correo de la cuenta').fill(email);
     await tab.getByLabel('Contraseña de la cuenta').fill('fixture-password');
-    await tab.getByRole('button',{name:'Iniciar sesión',exact:true}).click();
+    await tab.getByRole('button',{name:'Iniciar sesión',exact:true}).click(); await tab.waitForURL(url=>url.pathname!=='/profile'); await tab.goto('/profile');
     await expect(tab.getByText('Sesión iniciada: '+email)).toBeVisible();
   }
   // Reload A so its storage is read again, then generate an auth event in B.
