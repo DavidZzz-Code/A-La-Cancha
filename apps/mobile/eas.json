@@ -1,0 +1,16 @@
+{
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "environment": "preview",
+      "node": "24.14.0",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_odthiabC-Bo0tjdWbQalRw_uLYralDw",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://pednpnrgxszcffivfozo.supabase.co"
+      }
+    }
+  }
+}
