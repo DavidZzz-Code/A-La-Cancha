@@ -28,11 +28,11 @@ export default function RemoteAgendaScreen() {
     fetchQuote(court.id,date,time,duration,controller.signal).then(quote=>{if(!controller.signal.aborted)setPrice({key:priceKey,quote,error:''});}).catch(()=>{if(!controller.signal.aborted)setPrice({key:priceKey,quote:null,error:'No pudimos consultar el precio. Actualiza los horarios.'});});
     return()=>controller.abort();
   },[court,date,time,duration,priceKey]);
-  return <Page back><Heading title="Agenda conectada" subtitle="Entorno de pruebas. Consulta horarios y precios; inicia sesión para crear un bloqueo temporal."/>
+  return <Page back><Heading title="Buscar cancha" subtitle="Elige una cancha y consulta los horarios disponibles."/>
     {!supabase ? <Empty title="Conexión pendiente" message="Esta versión conserva la demostración local. La agenda en línea aún no está configurada."/> : <View style={{gap:18,maxWidth:800}}>
-      <Button secondary onPress={()=>router.push('/remote-reservations')}>Ver mis bloqueos conectados</Button>
+      <Button secondary onPress={()=>router.push('/remote-reservations')}>Mis reservas</Button>
       <Button secondary onPress={()=>{setTime('');setRefresh(v=>v+1);}}>Actualizar agenda</Button>
-      {catalog.revision!==refresh ? <Label>Cargando canchas…</Label> : catalog.error ? <Label accessibilityRole="alert">{catalog.error}</Label> : !catalog.items.length ? <Empty title="Aún no hay canchas publicadas" message="Cuando haya canchas de prueba publicadas aparecerán aquí."/> : <>
+      {catalog.revision!==refresh ? <Label>Cargando canchas…</Label> : catalog.error ? <Label accessibilityRole="alert">{catalog.error}</Label> : !catalog.items.length ? <Empty title="Aún no hay canchas publicadas" message="Las sedes aparecerán aquí cuando publiquen sus horarios."/> : <>
         <View style={{gap:10}}>{catalog.items.map(item=><Chip key={item.id} active={courtId===item.id} onPress={()=>{setCourtId(item.id);setTime('');}}>{item.name+' · '+item.venue+' · '+item.city}</Chip>)}</View>
         {court && <><Label>{court.capacity} jugadores como máximo</Label><DateStrip value={date} onChange={value=>{setDate(value);setTime('');}}/>
           <View style={{flexDirection:'row',gap:8,flexWrap:'wrap'}}>{[30,60,90,120].map(value=><Chip key={value} active={duration===value} onPress={()=>{setDuration(value);setTime('');}}>{value+' min'}</Chip>)}</View>

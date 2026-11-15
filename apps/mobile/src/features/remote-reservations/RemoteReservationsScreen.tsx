@@ -12,8 +12,8 @@ import { decisionLabels, holdError, readIntent, readSelection, reservationStatus
 
 export default function RemoteReservationsScreen() {
   const {session,loading} = useAuth(); const params = useLocalSearchParams(); const router = useRouter();
-  return <Page back><Heading title="Mis bloqueos conectados" subtitle="Pruebas en desarrollo. Un bloqueo temporal no confirma una reserva ni acredita un pago."/>
-    {loading ? <Label>Cargando sesión…</Label> : !session ? <><Empty title="Inicia sesión para continuar" message="Puedes explorar sin cuenta. Para bloquear un turno necesitas una cuenta de desarrollo."/><Button onPress={()=>router.push('/profile')}>Ir a mi cuenta</Button></>
+  return <Page back><Heading title="Mis reservas" subtitle="Consulta tus turnos y las respuestas del establecimiento."/>
+    {loading ? <Label>Cargando sesión…</Label> : !session ? <><Empty title="Inicia sesión para continuar" message="Puedes explorar sin cuenta. Para bloquear un turno necesitas una cuenta."/><Button onPress={()=>router.push('/profile')}>Ir a mi cuenta</Button></>
       : <ReservationPanel key={session.user.id+JSON.stringify(readSelection(params))} actor={session.user.id} selection={readSelection(params)}/>}
   </Page>;
 }
@@ -81,7 +81,7 @@ function ReservationPanel({actor,selection}:{actor:string;selection:Selection|nu
       <Label>Conservamos los mismos datos y la misma referencia aunque hayas cambiado de horario o recargado la página.</Label>
       <Button disabled={busy} onPress={()=>void submit()}>{busy?'Comprobando…':'Comprobar o reintentar solicitud'}</Button>
     </View> : selection && !result && !(busy && operation !== 'create') && <View style={{gap:12,padding:20,borderRadius:20,backgroundColor:'#EAF1E6'}}>
-      <Label accessibilityRole="header">Bloquear turno de prueba</Label>
+      <Label accessibilityRole="header">Apartar un turno</Label>
       <Label>{selection.date} · {selection.time} · {selection.duration} min · hora de Colombia</Label>
       <Label>El servidor vuelve a comprobar disponibilidad y precio. Revisa el importe final después de crear el bloqueo; puedes cancelarlo. No se realizará ningún cobro.</Label>
       <Label>Nombre del equipo</Label><TextInput accessibilityLabel="Nombre del equipo conectado" value={team} onChangeText={setTeam} maxLength={40} editable={!busy} style={{borderWidth:1,borderColor:'#D9DFD5',borderRadius:12,padding:14}}/>
@@ -97,9 +97,9 @@ function ReservationPanel({actor,selection}:{actor:string;selection:Selection|nu
       <Label>Descuento: {money(result.discount)} · anticipo previsto: {money(result.deposit)} · saldo previsto: {money(result.balance)}</Label>
       <Label>Importes informativos. No hay pago ni confirmación automática.</Label>
     </View>}
-    <Heading title="Historial conectado" subtitle="Últimos 50 registros de esta cuenta. Separados de las reservas de demostración local."/>
+    <Heading title="Tus turnos" subtitle="Tus 50 reservas más recientes."/>
     <Button secondary disabled={busy} onPress={()=>{setResult(null);setRevision(v=>v+1);}}>Actualizar mis bloqueos</Button>
-    {list.revision!==revision ? <Label>Consultando tus bloqueos…</Label> : list.error ? <Label accessibilityRole="alert">{list.error}</Label> : !list.rows.length ? <Label>Aún no tienes bloqueos conectados.</Label> : list.rows.map(row=><View key={row.id} style={{gap:10,padding:18,borderWidth:1,borderColor:'#D9DFD5',borderRadius:18}}>
+    {list.revision!==revision ? <Label>Consultando tus bloqueos…</Label> : list.error ? <Label accessibilityRole="alert">{list.error}</Label> : !list.rows.length ? <Label>Aún no tienes reservas.</Label> : list.rows.map(row=><View key={row.id} style={{gap:10,padding:18,borderWidth:1,borderColor:'#D9DFD5',borderRadius:18}}>
       <Label accessibilityRole="header">{row.team}</Label>
       <Label>{new Date(row.starts_at).toLocaleString('es-CO',{timeZone:'America/Bogota'})} · hora de Colombia</Label>
       {row.kind==='player' && row.status==='confirmed' && row.reschedule_requests?.[0] &&
