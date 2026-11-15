@@ -21,3 +21,5 @@ Desde la raíz del repositorio con Node 24, ejecutar `npm ci` y entrar a `apps/m
 5. Cerrar Expo Go, apagar el PC y abrir A La Cancha desde su ícono con datos móviles. Iniciar sesión y consultar las reservas conectadas. Registrar versión, dispositivo y resultado.
 
 Inicio por cuenta: al entrar o restaurar la sesión, un miembro del establecimiento accede a la agenda del día y sus solicitudes. El jugador ve su siguiente reserva confirmada, Buscar cancha y Mis reservas conectadas. Jugar permite consultar la disponibilidad desde la agenda del encargado.
+
+En la versión conectada, el inicio ofrece entrar, crear una cuenta por correo o consultar canchas como invitado. Si el servidor requiere confirmar la dirección, la app indica volver a iniciar sesión después de verificar el correo. El registro crea una cuenta de jugador. Los permisos de establecimiento provienen de sus membresías.

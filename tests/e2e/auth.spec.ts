@@ -2,6 +2,21 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Cuenta de desarrollo con API simulada', () => {
   test.skip(process.env.AUTH_E2E !== '1', 'Requiere exportación con configuración de prueba.');
+  test('registro desde el inicio y confirmación de correo', async ({page})=>{
+    await page.route('**/auth/v1/signup',route=>{
+      expect(route.request().postDataJSON().email).toBe('registro@example.test');
+      return route.fulfill({json:{id:'00000000-0000-0000-0000-000000000009',email:'registro@example.test',identities:[]}});
+    });
+    await page.goto('/');
+    await page.getByRole('button',{name:'Crear cuenta',exact:true}).click();
+    await page.getByLabel('Correo de la cuenta').fill('registro@example.test');
+    await page.getByLabel('Contraseña de la cuenta').fill('abc');
+    await expect(page.getByRole('button',{name:'Registrar cuenta'})).toBeDisabled();
+    await page.getByLabel('Contraseña de la cuenta').fill('fixture-password');
+    await page.getByRole('button',{name:'Registrar cuenta'}).click();
+    await expect(page.getByRole('alert')).toContainText('Revisa tu correo');
+    await expect(page.getByRole('button',{name:'Iniciar sesión',exact:true})).toBeVisible();
+  });
   test('rechaza credenciales, restaura sesión y cierra sin conservar contraseña', async ({ page }) => {
     const user = { id: '00000000-0000-0000-0000-000000000001', aud: 'authenticated', role: 'authenticated', email: 'player@example.test', app_metadata: {}, user_metadata: {}, created_at: new Date().toISOString() };
     const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64url');

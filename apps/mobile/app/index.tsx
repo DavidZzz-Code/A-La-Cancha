@@ -4,6 +4,7 @@ import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { Button, Heading, Label, Page } from '../src/components/ui';
 import { useAuth } from '../src/features/auth/AuthProvider';
 import { supabase } from '../src/features/auth/client';
+import { AccountPanel } from '../src/features/auth/AccountPanel';
 import ExploreScreen from '../src/features/discovery/ExploreScreen';
 
 type Match = { team:string; starts_at:string; courts:{name:string}|null };
@@ -11,9 +12,13 @@ type Home = {role:'owner'} | {role:'player';match:Match|null} | {role:'error'};
 
 export default function HomeScreen() {
   const {session,loading}=useAuth();
+  const router=useRouter();
   const [revision,setRevision]=useState(0);
   if(loading)return <Page><Label>Cargando cuenta.</Label></Page>;
-  return session ? <AccountHome key={session.user.id+revision} actor={session.user.id} retry={()=>setRevision(n=>n+1)}/> : <ExploreScreen/>;
+  return session ? <AccountHome key={session.user.id+revision} actor={session.user.id} retry={()=>setRevision(n=>n+1)}/> : supabase ? <Page>
+    <AccountPanel/>
+    <Button secondary onPress={()=>router.push('/remote-agenda')}>Explorar canchas como invitado</Button>
+  </Page> : <ExploreScreen/>;
 }
 
 function AccountHome({actor,retry}:{actor:string;retry:()=>void}) {
