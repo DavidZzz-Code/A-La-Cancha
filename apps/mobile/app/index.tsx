@@ -11,14 +11,14 @@ type Home = {role:'owner'} | {role:'player';match:Match|null} | {role:'error'};
 
 export default function HomeScreen() {
   const {session,loading}=useAuth();
+  const [revision,setRevision]=useState(0);
   if(loading)return <Page><Label>Cargando cuenta.</Label></Page>;
-  return session ? <AccountHome key={session.user.id} actor={session.user.id}/> : <ExploreScreen/>;
+  return session ? <AccountHome key={session.user.id+revision} actor={session.user.id} retry={()=>setRevision(n=>n+1)}/> : <ExploreScreen/>;
 }
 
-function AccountHome({actor}:{actor:string}) {
+function AccountHome({actor,retry}:{actor:string;retry:()=>void}) {
   const router=useRouter();
   const [home,setHome]=useState<Home|null>(null);
-  const [revision,setRevision]=useState(0);
   useFocusEffect(useCallback(()=>{
     const controller=new AbortController();
     async function load():Promise<Home> {
@@ -36,11 +36,11 @@ function AccountHome({actor}:{actor:string}) {
     load().then(value=>{if(!controller.signal.aborted)setHome(value);})
       .catch(()=>{if(!controller.signal.aborted)setHome({role:'error'});});
     return ()=>controller.abort();
-  },[actor,revision]));
+  },[actor]));
   if(home?.role==='owner')return <Redirect href="/owner-agenda"/>;
   return <Page><Heading title="Mi próximo partido"/>
     {!home ? <Label>Consultando tu agenda.</Label> : home.role==='error' ? <View>
-      <Label>No pudimos cargar tu inicio. Revisa la conexión.</Label><Button onPress={()=>setRevision(n=>n+1)}>Reintentar</Button>
+      <Label>No pudimos cargar tu inicio. Revisa la conexión.</Label><Button onPress={retry}>Reintentar</Button>
     </View> : <View style={{gap:16}}>
       {home.match ? <><Label>{home.match.team} · {home.match.courts?.name ?? 'Cancha reservada'}</Label>
         <Label>{new Date(home.match.starts_at).toLocaleString('es-CO',{timeZone:'America/Bogota'})} · Hora de Colombia</Label></> :
