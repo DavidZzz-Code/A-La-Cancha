@@ -1,3 +1,4 @@
+import { VenueAccess } from '../profile/VenueAccess';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
@@ -10,6 +11,7 @@ export function AccountPanel() {
   const { session, loading, error } = useAuth();
   const router = useRouter();
   const [register,setRegister] = useState(false);
+  const [ownerIntent,setOwnerIntent]=useState(false);
   const [email,setEmail] = useState('');
   const [password,setPassword] = useState('');
   const [busy,setBusy] = useState(false);
@@ -29,7 +31,7 @@ export function AccountPanel() {
         return;
       }
       const credentials={email:email.trim(),password};
-      const result=register ? await supabase.auth.signUp(credentials) : await supabase.auth.signInWithPassword(credentials);
+      const result=register ? await supabase.auth.signUp({...credentials,options:{data:{wants_venue_access:ownerIntent}}}) : await supabase.auth.signInWithPassword(credentials);
       if(result.error) {
         if(result.error.status===429) setMessage('Espera unos minutos antes de volver a intentarlo.');
         else if(result.error.code==='weak_password') setMessage('Elige una contraseña más segura e inténtalo de nuevo.');
@@ -37,7 +39,7 @@ export function AccountPanel() {
         return;
       }
       setPassword('');
-      if(result.data.session) router.replace('/');
+      if(result.data.session) router.replace(result.data.user?.user_metadata?.wants_venue_access && register ? '/profile' : '/');
       else {
         setRegister(false);
         setMessage('Revisa tu correo para confirmar la dirección. Después vuelve aquí e inicia sesión.');
@@ -50,10 +52,15 @@ export function AccountPanel() {
     {loading ? <Label>Cargando sesión.</Label> : session ? <>
       <Label>Sesión iniciada: {session.user.email}</Label>
       <Button secondary onPress={()=>router.push('/remote-agenda')}>Consultar agenda conectada</Button>
-      <Button secondary onPress={()=>router.push('/owner-agenda')}>Agenda de mi establecimiento</Button>
+      <VenueAccess key={session.user.id} actor={session.user.id} initialOpen={session.user.user_metadata?.wants_venue_access===true}/>
       <Button disabled={busy} onPress={submit}>Cerrar sesión</Button>
     </> : <>
       <Heading title={register?'Crea tu cuenta':'Entra a A-La-Cancha'}/>
+      {register && <View style={{gap:8}}><Label>¿Cómo usarás A-La-Cancha?</Label>
+        <Button secondary={ownerIntent} onPress={()=>setOwnerIntent(false)}>Quiero jugar</Button>
+        <Button secondary={!ownerIntent} onPress={()=>setOwnerIntent(true)}>Tengo un establecimiento</Button>
+        {ownerIntent && <Label>Después de confirmar tu correo, entra en Mi cuenta para solicitar acceso a la sede.</Label>}
+      </View>}
       <Label>Correo electrónico</Label>
       <TextInput accessibilityLabel="Correo de la cuenta" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" editable={!busy} style={field}/>
       <Label>Contraseña{register?' (mínimo 8 caracteres)':''}</Label>

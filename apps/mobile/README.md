@@ -23,3 +23,6 @@ Desde la raíz del repositorio con Node 24, ejecutar `npm ci` y entrar a `apps/m
 Inicio por cuenta: al entrar o restaurar la sesión, un miembro del establecimiento accede a la agenda del día y sus solicitudes. El jugador ve su siguiente reserva confirmada, Buscar cancha y Mis reservas conectadas. Jugar permite consultar la disponibilidad desde la agenda del encargado.
 
 En la versión conectada, el inicio ofrece entrar, crear una cuenta por correo o consultar canchas como invitado. Si el servidor requiere confirmar la dirección, la app indica volver a iniciar sesión después de verificar el correo. El registro crea una cuenta de jugador. Los permisos de establecimiento provienen de sus membresías.
+
+En el APK conectado, el catálogo, los horarios y las reservas proceden del servidor. Los nombres de sedes de prueba identifican los datos disponibles. Los cobros siguen pendientes.
+El registro permite indicar interés en administrar un establecimiento. Una vez confirmado el correo, la persona envía el nombre desde Mi cuenta o consulta el estado de una solicitud anterior. Operaciones verifica la identidad y la sede por separado; al aprobar debe crear la membresía de la sede verificada y marcar la solicitud aprobada en la misma transacción. Los clientes solo pueden enviar su propia solicitud y leer su estado.

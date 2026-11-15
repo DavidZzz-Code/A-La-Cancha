@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { View } from 'react-native';
+import { colors,fonts } from '@alacancha/design-tokens';
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { Button, Heading, Label, Page } from '../src/components/ui';
 import { useAuth } from '../src/features/auth/AuthProvider';
@@ -43,13 +44,15 @@ function AccountHome({actor,retry}:{actor:string;retry:()=>void}) {
     return ()=>controller.abort();
   },[actor]));
   if(home?.role==='owner')return <Redirect href="/owner-agenda"/>;
-  return <Page><Heading title="Mi próximo partido"/>
+  return <Page><Heading title="Mi cancha"/>
     {!home ? <Label>Consultando tu agenda.</Label> : home.role==='error' ? <View>
       <Label>No pudimos cargar tu inicio. Revisa la conexión.</Label><Button onPress={retry}>Reintentar</Button>
     </View> : <View style={{gap:16}}>
-      {home.match ? <><Label>{home.match.team} · {home.match.courts?.name ?? 'Cancha reservada'}</Label>
-        <Label>{new Date(home.match.starts_at).toLocaleString('es-CO',{timeZone:'America/Bogota'})} · Hora de Colombia</Label></> :
-        <Label>Aún no tienes partidos confirmados por jugar.</Label>}
+      <View style={{padding:24,borderRadius:22,backgroundColor:colors.forest,gap:10}}>
+      <Label style={{color:colors.lime,fontFamily:fonts.bold}}>Mi próximo partido</Label>
+      {home.match ? <><Label style={{color:colors.paper,fontSize:23,fontFamily:fonts.display}}>{home.match.team} · {home.match.courts?.name ?? 'Cancha reservada'}</Label>
+        <Label style={{color:colors.paper}}>{new Date(home.match.starts_at).toLocaleString('es-CO',{timeZone:'America/Bogota'})} · Hora de Colombia</Label></> :
+        <Label style={{color:colors.paper,fontSize:18}}>Aún no tienes partidos confirmados por jugar.</Label>}</View>
       <Button onPress={()=>router.push('/remote-agenda')}>Buscar cancha</Button>
       <Button secondary onPress={()=>router.push('/remote-reservations')}>Ver mis reservas</Button>
     </View>}
