@@ -64,16 +64,16 @@ function DemandGrid({matches}:{matches:Entry[]}){
 }
 export function OwnerOverview({metrics}:{metrics:boolean}){
  const {session}=useAuth(),{colors:c}=useTheme(),router=useRouter();
- const [period,setPeriod]=useState(7),[selected,select]=useState(''),[revision,refresh]=useState(0);
+ const [period,setPeriod]=useState(7),[selected,select]=useState(''),[revision,refresh]=useState(0),[now,setNow]=useState(Date.now);
  const [data,setData]=useState<Snapshot|null>(null),[error,setError]=useState(false);
  const [forward,setForward]=useState(true),[expanded,setExpanded]=useState('');
  const count=metrics?period:1, actor=session?.user.id;
  useFocusEffect(useCallback(()=>{
   setData(null);setError(false);if(!actor)return;
   const controller=new AbortController();
-  const update=()=>load(actor,count,forward,!metrics,controller.signal).then(result=>{if(!controller.signal.aborted){setData(result);setError(false); }})
-   .catch(()=>{if(!controller.signal.aborted)setError(true);});
-  void update();const timer=setInterval(update,60000);
+  const update=()=>{setNow(Date.now());return load(actor,count,forward,!metrics,controller.signal).then(result=>{if(!controller.signal.aborted){setData(result);setError(false); }})
+   .catch(()=>{if(!controller.signal.aborted)setError(true);});};
+  if(revision>=0)void update();const timer=setInterval(update,60000);
   return()=>{clearInterval(timer);controller.abort();};
  },[actor,count,revision,forward,metrics]));
  const courts=(data?.courts??[]).filter(v=>!selected||v.id===selected);
@@ -81,10 +81,10 @@ export function OwnerOverview({metrics}:{metrics:boolean}){
  const matches=rows.filter(r=>r.kind!=='block');
  const days=data?.days??[];
  const stats=usage(courts,rows,days);
- const next=matches.find(r=>Date.parse(r.starts_at)>=Date.now());
+ const next=matches.find(r=>Date.parse(r.starts_at)>=now);
  const paid=(r:Entry)=>r.reservation_receipts.reduce((v,x)=>v+x.amount,0);
  const outstanding=(r:Entry)=>r.kind==='player'&&!r.reservation_receipts.some(v=>v.part==='balance')?r.balance:0;
- const upcoming=matches.filter(r=>r.status==='confirmed'&&Date.parse(r.ends_at)>Date.now());
+ const upcoming=matches.filter(r=>r.status==='confirmed'&&Date.parse(r.ends_at)>now);
  const unpaid=matches.filter(r=>outstanding(r)>0);
  const pending=unpaid.reduce((v,r)=>v+outstanding(r),0);
  const dateTime=(r:Entry)=>new Date(r.starts_at).toLocaleString('es-CO',{timeZone:'America/Bogota',weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',hour12:true});

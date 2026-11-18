@@ -17,8 +17,9 @@ import { colombiaTime, dailySlots, kindLabels, statusLabels, type AgendaEntry, t
 
 export default function OwnerAgendaScreen() {
   const { session, loading } = useAuth(); const router = useRouter();
+  const params=useLocalSearchParams<{court?:string;date?:string}>();
   return <Page back><Heading title="Agenda"/>
-    {!supabase ? <Empty title="Conexión pendiente" message="La agenda del establecimiento necesita conexión al servidor."/> : loading ? <Label>Cargando sesión.</Label> : !session ? <View style={{ gap: 12 }}><Label>Inicia sesión con una cuenta autorizada por el establecimiento.</Label><Button onPress={() => router.push('/profile')}>Ir a mi cuenta</Button></View> : <OwnerPanel key={session.user.id} actor={session.user.id}/>}
+    {!supabase ? <Empty title="Conexión pendiente" message="La agenda del establecimiento necesita conexión al servidor."/> : loading ? <Label>Cargando sesión.</Label> : !session ? <View style={{ gap: 12 }}><Label>Inicia sesión con una cuenta autorizada por el establecimiento.</Label><Button onPress={() => router.push('/profile')}>Ir a mi cuenta</Button></View> : <OwnerPanel key={JSON.stringify([session.user.id,params.court,params.date])} actor={session.user.id}/>}
   </Page>;
 }
 function OwnerPanel({ actor }: { actor: string }) { const {colors:themeColors}=useTheme();
@@ -26,7 +27,7 @@ function OwnerPanel({ actor }: { actor: string }) { const {colors:themeColors}=u
   const params=useLocalSearchParams<{court?:string;date?:string}>();
   const [decision,setDecision]=useState('');
   const [refresh, setRefresh] = useState(0), [courtId, setCourtId] = useState(params.court||''), [date, setDate] = useState(()=>params.date||localDate());
-  useEffect(()=>{if(params.court)setCourtId(params.court);if(params.date)setDate(params.date);},[params.court,params.date]);
+  
   const [catalog, setCatalog] = useState<{ revision: number; courts: ManagedCourt[]; error: string }>({ revision: -1, courts: [], error: '' });
   const [agenda, setAgenda] = useState<{ key: string; rows: AgendaEntry[]; error: string; at: number }>({ key: '', rows: [], error: '', at: 0 });
   const court = catalog.revision === refresh ? catalog.courts.find(c => c.id === courtId) : undefined;

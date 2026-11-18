@@ -3,7 +3,6 @@ import {CourtSettings} from './CourtSettings';
 import {VenueLocation} from './VenueLocation';
 import { useEffect, useState } from 'react';
 import { TextInput, View } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Button, Label } from '../../components/ui';
 import { supabase } from '../auth/client';
 
@@ -11,7 +10,6 @@ type Request = {venue_name:string;status:'pending'|'approved'|'rejected'};
 const labels = {pending:'En revisión',approved:'Aprobada',rejected:'Rechazada'};
 
 export function VenueAccess({actor,initialOpen=false}:{actor:string;initialOpen?:boolean}) { const {colors:themeColors}=useTheme();
-  const router=useRouter();
   const [open,setOpen]=useState(initialOpen);
   const [sites,setSites]=useState<{id:string;name:string;latitude:number|null;longitude:number|null}[]>([]);
   const [venue,setVenue]=useState('');

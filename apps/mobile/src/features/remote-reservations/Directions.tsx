@@ -12,12 +12,11 @@ export function Directions({court}:{court:string}){
  const [retry,setRetry]=useState(0);
  useEffect(()=>{
   const controller=new AbortController();
-  setVenue(null);setError('');setPhoto('');
   supabase!.storage.from('court-gallery').list(court,{limit:1}).then(({data})=>{if(!controller.signal.aborted && data?.[0])setPhoto(supabase!.storage.from('court-gallery').getPublicUrl(court+'/'+data[0].name).data.publicUrl);}).catch(()=>{});
   async function load(){
    const result=await supabase!.from('courts').select('venue:venues!inner(name,city,address,latitude,longitude,entrance_confirmed)').eq('id',court).abortSignal(controller.signal).single();
    if(result.error)throw result.error;
-   if(!controller.signal.aborted)setVenue(result.data.venue as unknown as Venue);
+   if(!controller.signal.aborted){setVenue(result.data.venue as unknown as Venue);setError('');}
   }
   load().catch(()=>{if(!controller.signal.aborted)setError('No pudimos consultar la entrada.');});
   return()=>controller.abort();

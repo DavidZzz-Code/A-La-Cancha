@@ -21,7 +21,7 @@ function MatchTime({row}:{row:RemoteReservation}){
  return <Label>{date.toLocaleDateString('es-CO',{timeZone:zone,weekday:'short',day:'numeric',month:'short'})} · {time(row.starts_at)} – {time(row.ends_at)}</Label>;
 }
 function Goal(){
- const progress=useRef(new Animated.Value(0)).current;
+ const [progress]=useState(()=>new Animated.Value(0));
  useEffect(()=>{const motion=Animated.timing(progress,{toValue:1,duration:650,useNativeDriver:true});motion.start();return()=>motion.stop();},[progress]);
  return <View accessible={false} style={{height:82,alignItems:'center',justifyContent:'center'}}><Animated.Text style={{fontSize:38,transform:[{translateX:progress.interpolate({inputRange:[0,1],outputRange:[-100,-22]})},{translateY:progress.interpolate({inputRange:[0,.5,1],outputRange:[6,-16,0]})}]}}>⚽</Animated.Text><Animated.Text style={{position:'absolute',fontSize:48,color:'#65bd26',opacity:progress,left:'53%'}}>✓</Animated.Text></View>;
 }

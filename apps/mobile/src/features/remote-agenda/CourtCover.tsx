@@ -11,13 +11,14 @@ const covers=[
 ];
 export function CourtCover({name,court}:{name:string;court?:string}){
  const cover=covers.find(item=>name.toLowerCase().includes(item.name));
- const [uploaded,setUploaded]=useState('');
+ const [photo,setUploaded]=useState<{court:string;url:string}|null>(null);
+ const uploaded=photo?.court===court?photo?.url:'';
  useEffect(()=>{
-   let active=true;setUploaded('');
+   let active=true;
    if(court&&supabase){
     const gallery=supabase.storage.from('court-gallery');
     gallery.list(court,{limit:1,sortBy:{column:'name',order:'asc'}}).then(({data})=>{
-      if(active&&data?.[0])setUploaded(gallery.getPublicUrl(court+'/'+data[0].name).data.publicUrl);
+      if(active&&data?.[0])setUploaded({court,url:gallery.getPublicUrl(court+'/'+data[0].name).data.publicUrl});
     }).catch(()=>{});
    }
    return()=>{active=false;};

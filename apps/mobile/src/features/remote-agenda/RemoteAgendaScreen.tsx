@@ -8,7 +8,7 @@ import {useTheme} from '../../lib/theme';
 import CourtMap from './CourtMap';
 import { CourtCover } from './CourtCover';
 import { useEffect, useState } from 'react';
-import {  Modal, Pressable, ScrollView, TextInput, View, useWindowDimensions } from 'react-native';
+import {  Modal, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fonts } from '@alacancha/design-tokens';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -17,8 +17,12 @@ import { Page, Heading, Label, Button, Chip, DateStrip, Empty, Sheet } from '../
 import { supabase } from '../auth/client';
 import { fetchBusy, fetchCourts, fetchQuote } from './api';
 import { openSlots, type RemoteCourt, type ServerQuote } from './contracts';
-export default function RemoteAgendaScreen() { const {colors:colors}=useTheme();
-  const router=useRouter();const params=useLocalSearchParams<{court?:string}>();const favorites=useCourtFavorites();
+export default function RemoteAgendaScreen(){
+ const {court}=useLocalSearchParams<{court?:string}>();
+ return <Agenda key={court} initialCourt={court}/>;
+}
+function Agenda({initialCourt}:{initialCourt?:string}) { const {colors:colors}=useTheme();
+  const router=useRouter();const favorites=useCourtFavorites();
   const [mapOpen,setMapOpen]=useState(false);
   const {height}=useWindowDimensions();
   const insets=useSafeAreaInsets();
@@ -26,14 +30,15 @@ export default function RemoteAgendaScreen() { const {colors:colors}=useTheme();
   const [near,setNear]=useState<RemoteCourt[]>([]);
   const [refresh,setRefresh]=useState(0);
   const [catalog,setCatalog]=useState<{revision:number;items:RemoteCourt[];error:string}>({revision:-1,items:[],error:''});
-  const [courtId,setCourtId]=useState(params.court||''); const [date,setDate]=useState(()=>addDays(localDate(),1));
-  useEffect(()=>{if(params.court){setCourtId(params.court);setTime('');}},[params.court]);
+  const [courtId,setCourtId]=useState(initialCourt||''); const [date,setDate]=useState(()=>addDays(localDate(),1));
+  const [now,setNow]=useState(Date.now);
+  useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),60000);return()=>clearInterval(timer);},[]);
   const [period,setPeriod]=useState('');
   const duration=60; const [time,setTime]=useState('');
   const [agenda,setAgenda]=useState<{key:string;times:string[];error:string}>({key:'',times:[],error:''});
   const [price,setPrice]=useState<{key:string;quote:ServerQuote|null;error:string}>({key:'',quote:null,error:''});
   const court=catalog.items.find(c=>c.id===courtId);
-  const candidates=court?openSlots(court,date,duration,[],Date.now()):[];
+  const candidates=court?openSlots(court,date,duration,[],now):[];
   const periodOf=(v:string)=>Number(v.slice(0,2))<12?'Mañana':Number(v.slice(0,2))<18?'Tarde':'Noche';
   const periods=['Mañana','Tarde','Noche'].filter(label=>candidates.some(v=>periodOf(v)===label));
   const activePeriod=periods.includes(period)?period:periods[0];
@@ -86,7 +91,7 @@ export default function RemoteAgendaScreen() { const {colors:colors}=useTheme();
         {court && <Sheet visible={!!court} title={court.name} onClose={()=>{setCourtId('');setTime('');}}><CourtDetails id={court.id} cover={court.venue}/><Label>{court.capacity} jugadores como máximo</Label><DateStrip value={date} onChange={value=>{setDate(value);setTime('');}}/>
           <Label>Horarios · 1 hora</Label>
           <View style={{flexDirection:'row',gap:8}}>{periods.map(label=><Chip key={label} active={activePeriod===label} onPress={()=>{setPeriod(label);setTime('');}}>{label}</Chip>)}</View>
-          {agenda.key!==agendaKey ? <Label>Consultando horarios…</Label> : agenda.error ? <Label accessibilityRole="alert">{agenda.error}</Label> : !openSlots(court,date,duration,[],Date.now()).length ? <Label>No hay turnos disponibles para esta fecha y duración.</Label> : <View style={{flexDirection:'row',gap:8,flexWrap:'wrap'}}>{candidates.filter(v=>periodOf(v)===activePeriod).map(value=>agenda.times.includes(value)?<Chip key={value} active={time===value} onPress={()=>setTime(value)}>{hourLabel(value)}</Chip>:<View key={value} accessibilityState={{disabled:true}} style={{borderColor:colors.danger,borderWidth:1,borderRadius:14,padding:10}}><Label style={{color:colors.danger}}>{hourLabel(value)} · Ocupado</Label></View>)}</View>}
+          {agenda.key!==agendaKey ? <Label>Consultando horarios…</Label> : agenda.error ? <Label accessibilityRole="alert">{agenda.error}</Label> : !openSlots(court,date,duration,[],now).length ? <Label>No hay turnos disponibles para esta fecha y duración.</Label> : <View style={{flexDirection:'row',gap:8,flexWrap:'wrap'}}>{candidates.filter(v=>periodOf(v)===activePeriod).map(value=>agenda.times.includes(value)?<Chip key={value} active={time===value} onPress={()=>setTime(value)}>{hourLabel(value)}</Chip>:<View key={value} accessibilityState={{disabled:true}} style={{borderColor:colors.danger,borderWidth:1,borderRadius:14,padding:10}}><Label style={{color:colors.danger}}>{hourLabel(value)} · Ocupado</Label></View>)}</View>}
           {!!time && (price.key!==priceKey ? <Label>Consultando precio…</Label> : price.error ? <Label accessibilityRole="alert">{price.error}</Label> : price.quote && <View style={{gap:8,padding:20,backgroundColor:colors.soft,borderRadius:20}}><Label>{hourLabel(time)} – {hourLabel(time,60)}</Label><Label style={{fontSize:20,fontWeight:'700'}}>Total   {money(price.quote.total)}</Label><Label>Anticipo   {money(price.quote.deposit)}</Label>{price.quote.discount>0&&<Label>Descuento   {money(price.quote.discount)}</Label>}<Button onPress={()=>{setCourtId('');router.push({pathname:'/remote-reservations',params:{court:court.id,date,time,duration:String(duration),venue:court.venue,capacity:String(court.capacity),total:String(price.quote!.total),deposit:String(price.quote!.deposit)}});}}>{'Continuar · '+hourLabel(time)}</Button></View>)}
         </Sheet>}
       </>}
