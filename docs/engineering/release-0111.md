@@ -1,0 +1,2 @@
+# Android 0.1.11
+En un Samsung SM-A376B, Android 0.1.10 fallaba al inicializar AndroidX WorkManager antes de abrir la interfaz. En el DEX publicado, WorkDatabase_Impl tenía siete métodos virtuales y cero métodos directos, incluido el constructor que Room necesita invocar por reflexión. El plugin de configuración conserva la clase y el constructor al ejecutar R8 en release. Se mantiene la firma, el paquete y el almacenamiento de la aplicación para actualizar sobre la instalación anterior.

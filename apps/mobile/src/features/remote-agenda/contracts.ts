@@ -1,5 +1,5 @@
 import { clock, interval, validDate } from '@alacancha/domain';
-export type RemoteCourt = { id: string; name: string; venue: string; city: string; open: number; close: number; capacity: number };
+export type RemoteCourt = { id: string; name: string; venue: string; city: string; latitude:number|null; longitude:number|null; open: number; close: number; capacity: number; hourlyPrice:number };
 export type BusySlot = { starts_at: string; ends_at: string };
 export type ServerQuote = { base_price: number; discount: number; total: number; deposit: number; balance: number };
 function record(value: unknown): Record<string, unknown> { if (!value || typeof value !== 'object' || Array.isArray(value)) throw Error('Respuesta inválida.'); return value as Record<string, unknown>; }
@@ -9,7 +9,7 @@ export function readCourts(value: unknown): RemoteCourt[] {
   if (!Array.isArray(value)) throw Error('Catálogo inválido.');
   return value.map(item => { const row=record(item), venue=record(row.venues); const open=integer(row.open_minute), close=integer(row.close_minute), capacity=integer(row.capacity);
     if (open>=close || close>1440 || open%30 || close%30 || capacity<1 || capacity>30) throw Error('Horario inválido.');
-    return { id:text(row.id), name:text(row.name), venue:text(venue.name), city:text(venue.city), open, close, capacity };
+    return { id:text(row.id), name:text(row.name), venue:text(venue.name), city:text(venue.city), latitude:typeof venue.latitude==='number'?venue.latitude:null, longitude:typeof venue.longitude==='number'?venue.longitude:null, open, close, capacity, hourlyPrice:integer(row.hourly_price) };
   });
 }
 export function readBusy(value: unknown): BusySlot[] {

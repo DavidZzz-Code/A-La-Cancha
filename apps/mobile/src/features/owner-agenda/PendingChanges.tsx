@@ -1,3 +1,4 @@
+import {useTheme} from '../../lib/theme';
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Label } from '../../components/ui';
@@ -6,7 +7,7 @@ import type { ManagedCourt } from './contracts';
 
 const format = (value:string) => new Date(value).toLocaleString('es-CO',{timeZone:'America/Bogota',dateStyle:'short',timeStyle:'short'});
 
-export function PendingChanges({actor,courts,onDecision}:{actor:string;courts:ManagedCourt[];onDecision:(message:string)=>void}) {
+export function PendingChanges({actor,courts,onDecision}:{actor:string;courts:ManagedCourt[];onDecision:(message:string)=>void}) { const {colors:themeColors}=useTheme();
   const [page,setPage]=useState(0);
   const [result,setResult]=useState<Awaited<ReturnType<typeof fetchPendingChanges>>|null>(null);
   const [error,setError]=useState('');
@@ -39,7 +40,7 @@ export function PendingChanges({actor,courts,onDecision}:{actor:string;courts:Ma
     {result?.total===0 && <Label>No hay solicitudes pendientes.</Label>}
     {result?.rows.map(item=>{
       const court=courts.find(c=>c.id===item.reservations.court_id)!;
-      return <View key={item.id} style={{gap:7,padding:14,borderWidth:1,borderColor:'#D9DFD5',borderRadius:12}}>
+      return <View key={item.id} style={{gap:7,padding:14,borderWidth:1,borderColor:themeColors.border,borderRadius:12}}>
         <Label>{item.reservations.team} · {court.venue} · {court.name}</Label>
         <Label>Turno original: {format(item.original_start)}</Label>
         <Label>Turno solicitado: {format(item.proposed_start)}</Label>

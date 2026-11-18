@@ -1,3 +1,4 @@
+import {useTheme} from '../../lib/theme';
 import { useEffect, useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -11,7 +12,7 @@ import { colombiaTime, type ManagedCourt } from './contracts';
 import { cancelMaintenance, createMaintenance, fetchMaintenance } from './maintenance-api';
 import { maintenanceFailure, readMaintenanceIntent, type MaintenanceBlock, type MaintenanceIntent } from './maintenance-contracts';
 
-const inputStyle = { borderWidth:1, borderColor:'#D9DFD5', borderRadius:12, padding:14 };
+
 const blockLabel = { confirmed:'Mantenimiento activo', cancelled:'Mantenimiento cancelado', completed:'Mantenimiento completado' };
 export default function MaintenanceScreen() {
   const { session, loading } = useAuth(); const params = useLocalSearchParams(); const router = useRouter();
@@ -22,7 +23,7 @@ export default function MaintenanceScreen() {
     {loading ? <Label>Cargando sesión.</Label> : !session ? <Empty title="Inicia sesión" message="Necesitas una cuenta autorizada por el establecimiento."/> : <MaintenancePanel key={session.user.id+court+date} actor={session.user.id} courtId={court} date={date}/>}
   </Page>;
 }
-function MaintenancePanel({ actor, courtId, date }: { actor:string; courtId:string; date:string }) {
+function MaintenancePanel({ actor, courtId, date }: { actor:string; courtId:string; date:string }) { const {colors:themeColors}=useTheme(); const inputStyle = { color:themeColors.ink,backgroundColor:themeColors.paper,borderWidth:1, borderColor:themeColors.border, borderRadius:12, padding:14 };
   const storageKey = 'alacancha.maintenance-intent.'+actor;
   const [court,setCourt] = useState<ManagedCourt|null>(null), [access,setAccess] = useState('loading');
   const [time,setTime] = useState(''), [duration,setDuration] = useState(60), [reason,setReason] = useState('');
@@ -102,16 +103,16 @@ function MaintenancePanel({ actor, courtId, date }: { actor:string; courtId:stri
         <Label>Hora de inicio. El servidor comprobará que no exista una reserva o bloqueo.</Label>
         <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>{times.map(t=><Chip key={t} active={time===t} onPress={()=>{if(!busy)setTime(t);}}>{t}</Chip>)}</View>
         {!times.length&&<Label>No quedan horarios para esta fecha y duración. Elige otra fecha en la agenda.</Label>}
-        <TextInput accessibilityLabel="Motivo del mantenimiento" placeholder="Ej.: Reparación de iluminación" value={reason} onChangeText={setReason} maxLength={40} editable={!busy} style={inputStyle}/>
+        <TextInput placeholderTextColor={themeColors.muted} accessibilityLabel="Motivo del mantenimiento" placeholder="Ej.: Reparación de iluminación" value={reason} onChangeText={setReason} maxLength={40} editable={!busy} style={inputStyle}/>
         <Label>El bloqueo permanece hasta cancelarlo; no vence a los diez minutos.</Label>
         <Button disabled={busy||!reason.trim()||!times.includes(time)} onPress={()=>void submit()}>{busy?'Registrando mantenimiento.':'Confirmar mantenimiento'}</Button>
       </View>}
       <Label accessibilityRole="header">Mantenimientos del día</Label>
-      {list.revision!==revision?<Label>Consultando mantenimientos.</Label>:list.error?<Label accessibilityRole="alert">{list.error}</Label>:!list.rows.length?<Label>No hay mantenimientos registrados.</Label>:list.rows.map(row=><View key={row.id} style={{gap:10,padding:16,borderWidth:1,borderColor:'#D9DFD5',borderRadius:16}}>
+      {list.revision!==revision?<Label>Consultando mantenimientos.</Label>:list.error?<Label accessibilityRole="alert">{list.error}</Label>:!list.rows.length?<Label>No hay mantenimientos registrados.</Label>:list.rows.map(row=><View key={row.id} style={{gap:10,padding:16,borderWidth:1,borderColor:themeColors.border,borderRadius:16}}>
         <Label>{colombiaTime(row.starts_at)}–{colombiaTime(row.ends_at)} · {row.team}</Label><Label>{blockLabel[row.status]}</Label>
         {row.cancellation_reason&&<Label>Motivo de cancelación: {row.cancellation_reason}</Label>}
         {row.status==='confirmed'&&Date.parse(row.starts_at)>now&&(cancelId===row.id?<>
-          <TextInput accessibilityLabel="Motivo de cancelación del mantenimiento" value={cancelReason} onChangeText={setCancelReason} maxLength={200} editable={!busy} style={inputStyle}/>
+          <TextInput placeholderTextColor={themeColors.muted} accessibilityLabel="Motivo de cancelación del mantenimiento" value={cancelReason} onChangeText={setCancelReason} maxLength={200} editable={!busy} style={inputStyle}/>
           <Button disabled={busy||!cancelReason.trim()} onPress={()=>void cancel()}>{operation===row.id?'Cancelando mantenimiento.':'Confirmar cancelación del mantenimiento'}</Button>
           <Button secondary disabled={busy} onPress={()=>{setCancelId('');setCancelReason('');}}>Conservar mantenimiento</Button>
         </>:<Button secondary disabled={busy} onPress={()=>{setCancelId(row.id);setCancelReason('');}}>Cancelar mantenimiento</Button>)}

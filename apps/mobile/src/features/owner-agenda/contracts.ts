@@ -1,7 +1,7 @@
 import { addDays, clock, interval, validDate } from '@alacancha/domain';
 
 export type ManagedCourt = { id: string; venue_id: string; name: string; venue: string; open: number; close: number; published: boolean };
-export type AgendaEntry = { id: string; court_id: string; kind: 'player' | 'external' | 'block'; status: 'held' | 'confirmed' | 'completed' | 'cancelled' | 'expired'; starts_at: string; ends_at: string; expires_at: string | null; team: string; players: number };
+export type AgendaEntry = { pilot?:boolean; total?: number; deposit?:number; balance?:number; receipts?:{part:string;amount:number}[]; id: string; court_id: string; kind: 'player' | 'external' | 'block'; status: 'held' | 'confirmed' | 'completed' | 'cancelled' | 'expired'; starts_at: string; ends_at: string; expires_at: string | null; team: string; players: number };
 export const statusLabels = { held: 'Bloqueo temporal · sin confirmar', confirmed: 'Confirmada', completed: 'Completada', cancelled: 'Cancelada', expired: 'Vencida' };
 export const kindLabels = { player: 'Reserva de la app', external: 'Registro manual', block: 'Bloqueo del establecimiento' };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -38,7 +38,7 @@ export function readEntries(value: unknown[], court: string, date: string): Agen
       || !Number.isInteger(r.players) || Number(r.players) < 1 || Number(r.players) > 30) throw Error('Reserva inválida.');
     const expiry = r.expires_at === null ? null : instant(r.expires_at);
     if (r.status === 'held' && !expiry) throw Error('Falta el vencimiento.');
-    return { id: id(r.id), court_id: court, kind: r.kind as AgendaEntry['kind'], status: r.status as AgendaEntry['status'], starts_at: start, ends_at: end, expires_at: expiry, team: text(r.team), players: Number(r.players) };
+    return { pilot:!!r.pilot_deposit_approved_at,total:Number(r.total),deposit:Number(r.deposit),balance:Number(r.balance),receipts:(r.reservation_receipts??[]) as AgendaEntry["receipts"], id: id(r.id), court_id: court, kind: r.kind as AgendaEntry['kind'], status: r.status as AgendaEntry['status'], starts_at: start, ends_at: end, expires_at: expiry, team: text(r.team), players: Number(r.players) };
   });
 }
 export function dailySlots(court: ManagedCourt, date: string, entries: AgendaEntry[], now: number) {
@@ -50,5 +50,5 @@ export function dailySlots(court: ManagedCourt, date: string, entries: AgendaEnt
   });
 }
 export function colombiaTime(value: string): string {
-  return new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value));
+  return new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(value));
 }

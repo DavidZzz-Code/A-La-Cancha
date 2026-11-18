@@ -1,0 +1,3 @@
+# Android 0.1.10 — anticipo de prueba
+La acción Reservar una hora confirma automáticamente la reserva de jugador en las cuatro sedes piloto cuando el intervalo sigue disponible. El anticipo simulado conserva su importe para el flujo de reserva y no genera recibo de dinero. Cada sede nueva queda fuera del piloto por defecto. Al incorporar la pasarela se debe desactivar el piloto antes de aceptar cobros.
+La comprobación transaccional en Supabase confirmó el estado, la reutilización de la reserva al repetir la solicitud y la ausencia de recibos. Se revirtieron los datos de comprobación. TypeScript pasó.
