@@ -2,22 +2,34 @@
   "expo": {
     "name": "A La Cancha",
     "slug": "a-la-cancha",
-    "version": "0.1.2",
+    "version": "0.1.6",
     "scheme": "alacancha",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.alacancha.app",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "A La Cancha usa tu ubicación para mostrarte canchas cercanas."
+      }
     },
     "android": {
-      "versionCode": 3,
-      "package": "com.alacancha.app"
+      "versionCode": 7,
+      "package": "com.alacancha.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-foreground.png",
+        "backgroundColor": "#031426"
+      },
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
       "output": "single",
-      "name": "A La Cancha · Cartagena"
+      "name": "A La Cancha · Cartagena",
+      "favicon": "./assets/brand-logo.png"
     },
     "plugins": [
       "expo-router",
@@ -33,6 +45,7 @@
       "eas": {
         "projectId": "e26556b0-25e4-4b5f-ab7e-5ccde3b28e53"
       }
-    }
+    },
+    "icon": "./assets/brand-logo.png"
   }
 }

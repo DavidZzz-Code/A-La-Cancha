@@ -2,7 +2,7 @@ import { validDate } from '@alacancha/domain';
 export type Selection = { court: string; date: string; time: string; duration: number };
 export type HoldIntent = Selection & { key: string; actor: string; team: string; players: number };
 export const decisionLabels = {approved:'Cambio aprobado',rejected:'Cambio rechazado',unavailable:'Cambio de horario no disponible'};
-export type RemoteReservation = {
+export type RemoteReservation = { pilot_deposit_approved_at?:string|null; reservation_receipts?:{part:string;amount:number}[];
   reschedule_requests?: {status:keyof typeof decisionLabels}[];
   kind?: 'player'|'external'|'block'; id: string; actor_id: string; court_id: string; idempotency_key: string;
   status: 'held' | 'confirmed' | 'completed' | 'cancelled' | 'expired';

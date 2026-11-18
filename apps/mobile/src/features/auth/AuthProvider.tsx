@@ -1,9 +1,9 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { AppState, Platform } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import { supabase, authConfigurationError } from './client';
 type AuthState = { session: Session | null; loading: boolean; error: string | null };
-const Context = createContext<AuthState>({ session: null, loading: true, error: null });
+const Context = createContext<AuthState & {role:'owner'|'player'|'loading'|'error';retryRole:()=>void}>({role:'loading',retryRole:()=>{}, session: null, loading: true, error: null });
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ session: null, loading: !!supabase, error: authConfigurationError });
   useEffect(() => {
@@ -31,6 +31,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const listener = Platform.OS !== 'web' ? AppState.addEventListener('change', refresh) : null;
     return () => { active = false; clearTimeout(timer); subscription.unsubscribe(); listener?.remove(); if (Platform.OS !== 'web') client.auth.stopAutoRefresh(); };
   }, []);
-  return <Context.Provider value={state}>{children}</Context.Provider>;
+  const actor=state.session?.user.id;
+  const [membership,setMembership]=useState<{actor:string;role:'owner'|'player'|'error'}|null>(null);
+  const [revision,setRevision]=useState(0);
+  const retryRole=useCallback(()=>setRevision(v=>v+1),[]);
+  useEffect(()=>{
+    if(!actor||!supabase){setMembership(null);return;}
+    const controller=new AbortController();
+    supabase.from('venue_members').select('venue_id').eq('user_id',actor).limit(1).abortSignal(controller.signal).then(({data,error})=>{
+      if(!controller.signal.aborted)setMembership({actor,role:error?'error':data?.length?'owner':'player'});
+    });
+    return()=>controller.abort();
+  },[actor,revision]);
+  const role=actor&&membership?.actor===actor?membership.role:'loading';
+  return <Context.Provider value={{...state,role,retryRole}}>{children}</Context.Provider>;
 }
 export const useAuth = () => useContext(Context);

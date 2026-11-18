@@ -1,3 +1,4 @@
+import {useTheme} from '../../lib/theme';
 import { useEffect, useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { randomUUID } from 'expo-crypto';
@@ -30,7 +31,7 @@ async function registerBooking(intent: HoldIntent) {
     Date.parse(row.ends_at) !== Date.parse(span.end)) throw Error('Respuesta inesperada.');
 }
 
-export function ExternalBooking({ actor, court, date, rows, checkedAt, onSaved }: Props) {
+export function ExternalBooking({ actor, court, date, rows, checkedAt, onSaved }: Props) { const {colors:themeColors}=useTheme();
   const storageKey = ['alacancha.presencial', actor, court.id, date].join('.');
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
@@ -105,7 +106,7 @@ export function ExternalBooking({ actor, court, date, rows, checkedAt, onSaved }
     }
   }
   if (!open) return <Button secondary onPress={() => setOpen(true)}>Registrar turno presencial</Button>;
-  return <View style={{ gap: 12, padding: 16, borderRadius: 16, backgroundColor: '#EAF1E6' }}>
+  return <View style={{ gap: 12, padding: 16, borderRadius: 16, backgroundColor:themeColors.soft }}>
     <Label accessibilityRole="header">Turno presencial · {court.name} · {date}</Label>
     {intent ? <Label>{intent.team} · {intent.time} · {intent.duration} min · {intent.players} jugadores</Label> : <>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -115,8 +116,8 @@ export function ExternalBooking({ actor, court, date, rows, checkedAt, onSaved }
         {available.map(slot => <Chip key={slot.time} active={time === slot.time} onPress={() => setTime(slot.time)}>{slot.time}</Chip>)}
       </View>
       {!available.length && <Label>No hay horarios disponibles para esta duración.</Label>}
-      <TextInput accessibilityLabel="Equipo del turno presencial" placeholder="Nombre del equipo" maxLength={40} value={team} onChangeText={setTeam} editable={!busy}/>
-      <TextInput accessibilityLabel="Jugadores del turno presencial" placeholder="Cantidad de jugadores" maxLength={2} keyboardType="number-pad" value={players} onChangeText={setPlayers} editable={!busy}/>
+      <TextInput style={{color:themeColors.ink,padding:12}} placeholderTextColor={themeColors.muted} accessibilityLabel="Equipo del turno presencial" placeholder="Nombre del equipo" maxLength={40} value={team} onChangeText={setTeam} editable={!busy}/>
+      <TextInput style={{color:themeColors.ink,padding:12}} placeholderTextColor={themeColors.muted} accessibilityLabel="Jugadores del turno presencial" placeholder="Cantidad de jugadores" maxLength={2} keyboardType="number-pad" value={players} onChangeText={setPlayers} editable={!busy}/>
       <Label>Al registrarlo, el horario queda ocupado en la agenda de jugadores.</Label>
     </>}
     {!!message && <Label accessibilityRole="alert">{message}</Label>}

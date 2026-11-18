@@ -1,6 +1,6 @@
 import { supabase } from '../auth/client';
 import { readReservation, type HoldIntent } from './contracts';
-const columns = 'id,kind,actor_id,court_id,idempotency_key,status,starts_at,ends_at,expires_at,team,players,total,discount,deposit,balance';
+const columns = 'id,kind,actor_id,court_id,idempotency_key,status,starts_at,ends_at,expires_at,team,players,total,discount,deposit,balance,pilot_deposit_approved_at';
 async function client(actor: string) {
   if (!supabase) throw Error('Conexión pendiente.');
   const {data,error} = await supabase.auth.getSession();
@@ -9,7 +9,7 @@ async function client(actor: string) {
 }
 export async function fetchReservations(actor: string, signal: AbortSignal) {
   const db = await client(actor);
-  const {data,error} = await db.from('reservations').select(columns+',reschedule_requests(status)')
+  const {data,error} = await db.from('reservations').select(columns+',reschedule_requests(status),reservation_receipts(part,amount)')
     .eq('actor_id',actor).neq('reschedule_requests.status','pending')
     .order('decided_at',{referencedTable:'reschedule_requests',ascending:false})
     .order('id',{referencedTable:'reschedule_requests',ascending:false})
@@ -24,9 +24,10 @@ export async function createHold(intent: HoldIntent) {
   const {data:existing,error:lookupError} = await db.from('reservations').select(columns).eq('actor_id',intent.actor).eq('idempotency_key',intent.key).maybeSingle();
   if (lookupError) throw lookupError;
   if (existing) return readReservation(existing,intent.actor);
-  const {data,error} = await db.rpc('create_reservation',{
-    p_court:intent.court,p_date:intent.date,p_time:intent.time,p_duration:intent.duration,
-    p_players:intent.players,p_team:intent.team,p_key:intent.key,p_kind:'player',
+  if(intent.duration!==60)throw {code:'22023'};
+  const {data,error} = await db.rpc('reserve_player_hour',{
+    p_court:intent.court,p_date:intent.date,p_time:intent.time,
+    p_players:intent.players,p_team:intent.team,p_key:intent.key,
   }).single();
   if (error) throw error;
   return readReservation(data,intent.actor);

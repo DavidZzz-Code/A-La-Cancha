@@ -24,7 +24,7 @@ export async function fetchOwnerDay(actor: string, court: ManagedCourt, date: st
   if (membership.error || !membership.data) throw Error('No tienes acceso a esta agenda.');
   readMemberships([membership.data], actor);
   const bounds = dayBounds(date);
-  const rows = await db.from('reservations').select('id,court_id,kind,status,starts_at,ends_at,expires_at,team,players', { count: 'exact' })
+  const rows = await db.from('reservations').select('id,court_id,kind,status,starts_at,ends_at,expires_at,team,players,total,deposit,balance,pilot_deposit_approved_at,reservation_receipts(part,amount)', { count: 'exact' })
     .eq('court_id', court.id).lt('starts_at', bounds.end).gt('ends_at', bounds.start).order('starts_at').order('id').limit(200).abortSignal(signal);
   if (rows.error) throw rows.error;
   return readEntries(completeRows(rows.data, rows.count, 200), court.id, date);

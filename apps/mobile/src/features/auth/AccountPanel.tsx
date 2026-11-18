@@ -1,15 +1,19 @@
+import {useTheme} from '../../lib/theme';
+import { VenueAccess } from '../profile/VenueAccess';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { Image, TextInput, View } from 'react-native';
+import { fonts } from '@alacancha/design-tokens';
 import { Button, Heading, Label } from '../../components/ui';
 import { useAuth } from './AuthProvider';
 import { supabase } from './client';
 
-const field = {borderWidth:1,borderColor:'#9BAA99',borderRadius:12,padding:14};
-export function AccountPanel() {
+export function AccountPanel() { const {colors:colors}=useTheme(); const field = {borderWidth:1,borderColor:colors.border,backgroundColor:colors.paper,color:colors.ink,borderRadius:14,padding:15,fontSize:16};
+
   const { session, loading, error } = useAuth();
   const router = useRouter();
   const [register,setRegister] = useState(false);
+  const [ownerIntent,setOwnerIntent]=useState(false);
   const [email,setEmail] = useState('');
   const [password,setPassword] = useState('');
   const [busy,setBusy] = useState(false);
@@ -29,7 +33,7 @@ export function AccountPanel() {
         return;
       }
       const credentials={email:email.trim(),password};
-      const result=register ? await supabase.auth.signUp(credentials) : await supabase.auth.signInWithPassword(credentials);
+      const result=register ? await supabase.auth.signUp({...credentials,options:{data:{wants_venue_access:ownerIntent}}}) : await supabase.auth.signInWithPassword(credentials);
       if(result.error) {
         if(result.error.status===429) setMessage('Espera unos minutos antes de volver a intentarlo.');
         else if(result.error.code==='weak_password') setMessage('Elige una contraseña más segura e inténtalo de nuevo.');
@@ -37,7 +41,7 @@ export function AccountPanel() {
         return;
       }
       setPassword('');
-      if(result.data.session) router.replace('/');
+      if(result.data.session) router.replace(result.data.user?.user_metadata?.wants_venue_access && register ? '/profile' : '/');
       else {
         setRegister(false);
         setMessage('Revisa tu correo para confirmar la dirección. Después vuelve aquí e inicia sesión.');
@@ -50,10 +54,19 @@ export function AccountPanel() {
     {loading ? <Label>Cargando sesión.</Label> : session ? <>
       <Label>Sesión iniciada: {session.user.email}</Label>
       <Button secondary onPress={()=>router.push('/remote-agenda')}>Consultar agenda conectada</Button>
-      <Button secondary onPress={()=>router.push('/owner-agenda')}>Agenda de mi establecimiento</Button>
+      <VenueAccess key={session.user.id} actor={session.user.id} initialOpen={session.user.user_metadata?.wants_venue_access===true}/>
       <Button disabled={busy} onPress={submit}>Cerrar sesión</Button>
     </> : <>
-      <Heading title={register?'Crea tu cuenta':'Entra a A-La-Cancha'}/>
+      <View style={{backgroundColor:colors.deep,borderRadius:22,padding:22,gap:8}}>
+        <Image source={require('../../../assets/brand-logo.png')} accessibilityLabel="A La Cancha" style={{width:80,height:80,alignSelf:'center'}} resizeMode="contain"/>
+        <Label style={{fontFamily:fonts.display,fontSize:29,color:'#B4FF19'}}>Menos charla, más cancha.</Label>
+      </View>
+      <Heading title={register?'Crea tu cuenta':'Inicia sesión'} subtitle={register?'Elige cómo quieres usar A La Cancha.':'Entra para encontrar tu próximo partido.'}/>
+      {register && <View style={{gap:8}}><Label>¿Cómo usarás A-La-Cancha?</Label>
+        <Button secondary={ownerIntent} onPress={()=>setOwnerIntent(false)}>Quiero jugar</Button>
+        <Button secondary={!ownerIntent} onPress={()=>setOwnerIntent(true)}>Tengo un establecimiento</Button>
+        {ownerIntent && <Label>Después de confirmar tu correo, entra en Mi cuenta para solicitar acceso a la sede.</Label>}
+      </View>}
       <Label>Correo electrónico</Label>
       <TextInput accessibilityLabel="Correo de la cuenta" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" editable={!busy} style={field}/>
       <Label>Contraseña{register?' (mínimo 8 caracteres)':''}</Label>

@@ -1,13 +1,14 @@
+import {useTheme} from '../../lib/theme';
 import { useState } from 'react';
 import { View,useWindowDimensions } from 'react-native';
 import { useLocalSearchParams,useRouter } from 'expo-router';
 import { addDays,localDate,validDate,slots,quote,money,dateLabel } from '@alacancha/domain';
-import { colors as c,fonts as f } from '@alacancha/design-tokens';
+import { fonts as f } from '@alacancha/design-tokens';
 import { Page,Heading,Label,Badge,Button,Chip,DateStrip,Empty } from '../../components/ui';
 import { PitchArt } from '../../components/PitchArt';
 import { courts,demoOccupancy } from '../../lib/catalog';
 import { useApp } from '../../lib/context';
-export default function CourtScreen() {
+export default function CourtScreen() { const {colors:c}=useTheme();
   const params = useLocalSearchParams<{id:string;date?:string;time?:string;duration?:string}>(); const router = useRouter(); const {width} = useWindowDimensions(); const {reservations} = useApp(); const court = courts.find(item => item.id === params.id);
   const [date,setDate] = useState(params.date && validDate(params.date) && params.date >= localDate() && params.date <= addDays(localDate(),13) ? params.date : addDays(localDate(),1)); const [time,setTime] = useState(params.time || ''); const [duration,setDuration] = useState([60,90,120].includes(Number(params.duration)) ? Number(params.duration) : 60);
   if (!court) return <Page back><Empty title="No encontramos esa cancha" message="Elige otra opción del catálogo." onPress={() => router.replace('/')}/></Page>;

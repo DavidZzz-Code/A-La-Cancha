@@ -1,13 +1,14 @@
+import {useTheme} from '../../lib/theme';
 import { useState } from 'react';
 import { View,ScrollView,useWindowDimensions } from 'react-native';
 import { addDays,localDate,search,money,quote,slots,type Filters } from '@alacancha/domain';
-import { colors as c,fonts as f } from '@alacancha/design-tokens';
+import { fonts as f } from '@alacancha/design-tokens';
 import { Page,Label,Badge,Button,Chip,Heading,DateStrip,Sheet,Empty } from '../../components/ui';
 import { PitchArt } from '../../components/PitchArt';
 import { courts,demoOccupancy } from '../../lib/catalog';
 import { useApp } from '../../lib/context';
 import { CourtCard } from './CourtCard';
-export default function ExploreScreen() {
+export default function ExploreScreen() { const {colors:c}=useTheme();
   const {width} = useWindowDimensions(); const desktop = width >= 900; const {reservations} = useApp();
   const [filters,setFilters] = useState<Filters>({date:addDays(localDate(),1),time:'19:00',duration:60,sport:'all',zone:'',maxPrice:null,covered:false}); const [show,setShow] = useState(false); const [sort,setSort] = useState(false);
   const update = (value:Partial<Filters>) => setFilters(current => ({...current,...value})); const occupied = [...demoOccupancy(filters.date),...reservations]; const results = search(courts,filters,occupied);

@@ -1,0 +1,4 @@
+# Android 0.1.9
+La cotización muestra el anticipo y el saldo calculados por el servidor. El propietario registra la recepción efectiva del anticipo y después del saldo. Registrar el anticipo y confirmar el turno es una sola operación. La clave única por reserva y concepto evita duplicados. El registro queda asociado a la reserva incluso si cambia de hora. No hay pasarela ni procesamiento de dinero.
+La agenda muestra métricas por cancha y fecha y permite marcar partidos terminados como jugados. Mis reservas actualiza los estados mientras está abierta y muestra los importes registrados. Cómo llegar abre Google Maps con las coordenadas de la entrada confirmada por el propietario; hasta entonces se muestra la dirección disponible. Se conserva el logo original.
+Pendiente: pasarela y conciliación automática, notificaciones push y prueba en dispositivo.
