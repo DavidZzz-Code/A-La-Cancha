@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [revision,setRevision]=useState(0);
   const retryRole=useCallback(()=>setRevision(v=>v+1),[]);
   useEffect(()=>{
-    if(!actor||!supabase){setMembership(null);return;}
+    if(!actor||!supabase)return;
     const controller=new AbortController();
     supabase.from('venue_members').select('venue_id').eq('user_id',actor).limit(1).abortSignal(controller.signal).then(({data,error})=>{
       if(!controller.signal.aborted)setMembership({actor,role:error?'error':data?.length?'owner':'player'});

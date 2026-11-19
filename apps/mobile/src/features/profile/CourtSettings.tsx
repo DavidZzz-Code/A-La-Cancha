@@ -11,11 +11,10 @@ function minutes(value:string){
   if(!/^(?:[01]\d|2[0-3]):(?:00|30)$/.test(value) && value!=='24:00')return NaN;
   const [h,m]=value.split(':').map(Number);return h*60+m;
 }
-export function CourtSettings({venue}:{venue:string}){ const {colors:colors}=useTheme();
+export function CourtSettings({venue}:{venue:string}){
   const [courts,setCourts]=useState<Court[]>([]),[error,setError]=useState(false),[revision,setRevision]=useState(0);
   useEffect(()=>{
     const controller=new AbortController();
-    setError(false);
     supabase?.from('courts').select('id,name,published,hourly_price,open_minute,close_minute,capacity').eq('venue_id',venue).abortSignal(controller.signal)
       .then(({data,error})=>{if(!controller.signal.aborted){setError(!!error);setCourts(data??[]);}});
     return ()=>controller.abort();

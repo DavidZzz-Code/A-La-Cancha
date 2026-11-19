@@ -1,4 +1,4 @@
-import {useRef,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {Image,Linking,PanResponder,Pressable,Text,View} from 'react-native';
 import {Chip} from '../../components/ui';
 
@@ -19,12 +19,17 @@ export function ZoneMap({center,onCenter,pins,onPick,height=280}:{center:Point;o
   const middle=pixel(center,scale), left=middle.x-width/2, top=middle.y-height/2;
   const start=useRef(middle);
   const current=useRef({middle,scale,onCenter});
-  current.current={middle,scale,onCenter};
-  const gesture=useRef(PanResponder.create({
+  useEffect(()=>{current.current={middle,scale,onCenter};},[middle,scale,onCenter]);
+  const [gesture,setGesture]=useState<ReturnType<typeof PanResponder.create>>();
+  useEffect(()=>{
+   const responder=PanResponder.create({
     onMoveShouldSetPanResponderCapture:(_,g)=>Math.abs(g.dx)+Math.abs(g.dy)>8,
     onPanResponderGrant:()=>{start.current=current.current.middle;},
     onPanResponderMove:(_,g)=>current.current.onCenter(point(start.current.x-g.dx,start.current.y-g.dy,current.current.scale)),
-  })).current;
+   });
+   const timer=setTimeout(()=>setGesture(responder),0);
+   return()=>clearTimeout(timer);
+  },[]);
   const tiles=[];
   for(let y=Math.max(0,Math.floor(top/tileSize));y<=Math.min(count-1,Math.floor((top+height)/tileSize));y++){
     for(let x=Math.floor(left/tileSize);x<=Math.floor((left+width)/tileSize);x++){
@@ -33,7 +38,7 @@ export function ZoneMap({center,onCenter,pins,onPick,height=280}:{center:Point;o
     }
   }
   return <View style={{gap:6}}>
-    <View {...gesture.panHandlers} onLayout={e=>setWidth(e.nativeEvent.layout.width)} style={{height,overflow:'hidden',borderRadius:16,backgroundColor:'#dde8df'}}>
+    <View {...gesture?.panHandlers} onLayout={e=>setWidth(e.nativeEvent.layout.width)} style={{height,overflow:'hidden',borderRadius:16,backgroundColor:'#dde8df'}}>
       {width>0 && tiles}
       {pins.map(pin=>{const pos=pixel(pin,scale);return <Pressable accessibilityRole="button" accessibilityLabel={pin.name} onPress={()=>onPick(pin.id)} key={pin.id} style={{position:'absolute',left:pos.x-left-15,top:pos.y-top-15,borderRadius:16,width:30,height:30,alignItems:'center',justifyContent:'center',backgroundColor:pin.selected||pin.player?'#1858C8':'#104331',borderColor:'white',borderWidth:2}}><Text style={{color:'white',fontWeight:'bold'}}>{pin.player?'●':'A'}</Text></Pressable>;})}
     </View>

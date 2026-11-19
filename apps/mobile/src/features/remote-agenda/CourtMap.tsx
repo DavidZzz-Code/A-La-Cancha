@@ -1,11 +1,11 @@
 import {CourtDetails} from './CourtDetails';
 import {useTheme} from '../../lib/theme';
 import {money} from '@alacancha/domain';
-import {useEffect,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {View,ScrollView} from 'react-native';
 import {ZoneMap,type Point} from './ZoneMap';
 import * as Location from 'expo-location';
-import {Button,Label,Chip} from '../../components/ui';
+import {Button,Label} from '../../components/ui';
 import {distance,type MapProps} from './mapData';
 
 export default function CourtMap({courts,onNearby,onSelect,height}:MapProps){
@@ -17,9 +17,10 @@ export default function CourtMap({courts,onNearby,onSelect,height}:MapProps){
   const [busy,setBusy]=useState(false);
   const mapped=courts.filter(c=>c.latitude!==null && c.longitude!==null);
   const groups=new Map(mapped.map(c=>[String([c.latitude,c.longitude]),c]));
-  const sorted=position ? [...mapped].sort((a,b)=>distance(position.latitude,position.longitude,a)-distance(position.latitude,position.longitude,b)) : [];
+  const sorted=useMemo(()=>position ? courts.filter(c=>c.latitude!==null && c.longitude!==null).sort((a,b)=>distance(position.latitude,position.longitude,a)-distance(position.latitude,position.longitude,b)) : [],[courts,position]);
   const ids=JSON.stringify(sorted.map(c=>c.id));
-  useEffect(()=>{onNearby(sorted);},[ids,onNearby]); // Only the order matters to the catalogue.
+  const previousOrder=useRef('');
+  useEffect(()=>{if(previousOrder.current!==ids){previousOrder.current=ids;onNearby(sorted);}},[ids,onNearby,sorted]);
   async function locate(){
     setBusy(true);
     try {

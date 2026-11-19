@@ -11,14 +11,16 @@ import { useAuth } from '../auth/AuthProvider';
 import { supabase } from '../auth/client';
 import { fetchManagedCourts, fetchOwnerDay } from './api';
 import { CancelExternalBooking } from './CancelExternalBooking';
+import { ConfirmPlayerHold } from "./ConfirmPlayerHold";
 import { ReceiptAction } from './ReceiptAction';
 import { ExternalBooking } from './ExternalBooking';
 import { colombiaTime, dailySlots, kindLabels, statusLabels, type AgendaEntry, type ManagedCourt } from './contracts';
 
 export default function OwnerAgendaScreen() {
   const { session, loading } = useAuth(); const router = useRouter();
+  const params=useLocalSearchParams<{court?:string;date?:string}>();
   return <Page back><Heading title="Agenda"/>
-    {!supabase ? <Empty title="Conexión pendiente" message="La agenda del establecimiento necesita conexión al servidor."/> : loading ? <Label>Cargando sesión.</Label> : !session ? <View style={{ gap: 12 }}><Label>Inicia sesión con una cuenta autorizada por el establecimiento.</Label><Button onPress={() => router.push('/profile')}>Ir a mi cuenta</Button></View> : <OwnerPanel key={session.user.id} actor={session.user.id}/>}
+    {!supabase ? <Empty title="Conexión pendiente" message="La agenda del establecimiento necesita conexión al servidor."/> : loading ? <Label>Cargando sesión.</Label> : !session ? <View style={{ gap: 12 }}><Label>Inicia sesión con una cuenta autorizada por el establecimiento.</Label><Button onPress={() => router.push('/profile')}>Ir a mi cuenta</Button></View> : <OwnerPanel key={JSON.stringify([session.user.id,params.court,params.date])} actor={session.user.id}/>}
   </Page>;
 }
 function OwnerPanel({ actor }: { actor: string }) { const {colors:themeColors}=useTheme();
@@ -26,7 +28,7 @@ function OwnerPanel({ actor }: { actor: string }) { const {colors:themeColors}=u
   const params=useLocalSearchParams<{court?:string;date?:string}>();
   const [decision,setDecision]=useState('');
   const [refresh, setRefresh] = useState(0), [courtId, setCourtId] = useState(params.court||''), [date, setDate] = useState(()=>params.date||localDate());
-  useEffect(()=>{if(params.court)setCourtId(params.court);if(params.date)setDate(params.date);},[params.court,params.date]);
+  
   const [catalog, setCatalog] = useState<{ revision: number; courts: ManagedCourt[]; error: string }>({ revision: -1, courts: [], error: '' });
   const [agenda, setAgenda] = useState<{ key: string; rows: AgendaEntry[]; error: string; at: number }>({ key: '', rows: [], error: '', at: 0 });
   const court = catalog.revision === refresh ? catalog.courts.find(c => c.id === courtId) : undefined;
@@ -80,6 +82,7 @@ function OwnerPanel({ actor }: { actor: string }) { const {colors:themeColors}=u
             {row.kind !== 'block' && <Label>{row.players} jugadores</Label>}
             {row.kind==='player' && row.status==='confirmed' && <Reschedule row={row} owner onMoved={()=>setRefresh(n=>n+1)}/>}
             <ReceiptAction row={row} onSaved={() => setRefresh(v => v + 1)}/>
+            <ConfirmPlayerHold actor={actor} row={row} checkedAt={agenda.at} onSaved={() => setRefresh(v => v + 1)}/>
             <CancelExternalBooking actor={actor} row={row} checkedAt={agenda.at} onSaved={() => setRefresh(v => v + 1)}/>
             {row.status === 'held' && <Label>{Date.parse(row.expires_at!) <= agenda.at ? 'Plazo agotado; pendiente de actualización del servidor. El intervalo sigue marcado como ocupado.' : `Vence a las ${colombiaTime(row.expires_at!)}. Todavía no es una reserva confirmada.`}</Label>}
           </View>)}

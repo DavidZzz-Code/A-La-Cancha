@@ -13,7 +13,7 @@ export function CourtDetails({id,manage=false,cover}:{id:string;manage?:boolean;
  const [revision,refresh]=useState(0),[panel,show]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const [loaded,setLoaded]=useState(false);
  useEffect(()=>{
-  let active=true;setLoaded(false);setError('');
+  let active=true;
   async function loadPhotos(){
    const db=supabase!;
    const files:string[]=[];
@@ -25,7 +25,7 @@ export function CourtDetails({id,manage=false,cover}:{id:string;manage?:boolean;
    for(let offset=0;active;offset+=100){const page=await db.from('court_reviews').select('rating,comment').eq('court_id',id).order('created_at',{ascending:false}).range(offset,offset+99);if(page.error)throw page.error;rows.push(...page.data);if(page.data.length<100)break;}
    if(active){setReviews(rows);setLoaded(true);}
   }
-  setPhotos([]);Promise.all([loadPhotos(),loadReviews()]).catch(()=>{if(active)setError('No pudimos cargar fotos y reseñas.');});return()=>{active=false;};
+  Promise.all([loadPhotos(),loadReviews()]).then(()=>{if(active)setError('');}).catch(()=>{if(active)setError('No pudimos cargar fotos y reseñas.');});return()=>{active=false;};
  },[id,revision]);
  async function upload(){
   if(busy)return;setBusy(true);setError('');

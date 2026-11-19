@@ -13,6 +13,7 @@ async function fixture(page:Page, options:{lostCreate?:boolean;conflict?:boolean
   await page.route('https://auth-test.supabase.co/**',async route=>{
     const url=new URL(route.request().url());
     if(url.pathname.endsWith('/token'))return route.fulfill({json:{access_token:token(actor),refresh_token:'fixture-refresh',token_type:'bearer',expires_in:3600,user}});
+    if(url.pathname.endsWith('/venue_members'))return route.fulfill({json:[]});
     if(url.pathname.endsWith('/logout'))return route.fulfill({status:204});
     if(url.pathname.endsWith('/user'))return route.fulfill({json:user});
     if(url.pathname.endsWith('/reservations')) {
@@ -29,12 +30,12 @@ async function fixture(page:Page, options:{lostCreate?:boolean;conflict?:boolean
       }
       return route.fulfill({json:match?[row]:single?[]:row?[row]:[]});
     }
-    if(url.pathname.endsWith('/create_reservation')) {
+    if(url.pathname.endsWith('/reserve_player_hour')) {
       creates++;
       expect(route.request().headers().accept).toContain('application/vnd.pgrst.object+json');
       expect(JSON.parse(Buffer.from(route.request().headers().authorization.split('.')[1], 'base64url').toString()).sub).toBe(actor);
       if(options.conflict)return route.fulfill({status:409,json:{code:'23P01',message:'conflicting key'}});
-      const body=route.request().postDataJSON();expect(body.p_kind).toBe('player');
+      const body=route.request().postDataJSON();expect(body.p_time).toBe('08:00');
       expect(body).not.toHaveProperty('p_total');
       row={id,actor_id:actor,court_id:court,idempotency_key:body.p_key,status:'held',starts_at:body.p_date+'T13:00:00Z',ends_at:body.p_date+'T14:00:00Z',expires_at:new Date(Date.now()+(options.expired?-1000:600000)).toISOString(),team:body.p_team,players:body.p_players,total:95000,discount:5000,deposit:28500,balance:66500};
       if(options.lostCreate && !lost){lost=true;return route.abort('connectionreset');}
@@ -62,63 +63,73 @@ test.describe('Bloqueos autenticados con API simulada',()=>{
   test.skip(process.env.AUTH_E2E!=='1','Requiere configuración de prueba.');
   test('crea con precio final, persiste historial y cancela',async({page},info)=>{
     const calls=await fixture(page);
-    await page.getByRole('button',{name:'Crear bloqueo de 10 minutos'}).click();
-    await expect(page.getByText(/Total final del servidor:.*95.000/)).toBeVisible();
+    await page.getByRole('button',{name:/^Reservar ·/}).click();
+    await expect(page.getByText(/Total.*95.000/)).toBeVisible();
+    await page.getByRole('button',{name:'Ver detalle'}).click();
     await expect(page.getByRole('button',{name:'Cancelar bloqueo'})).toBeVisible();
-    await expect(page.getByRole('button',{name:'Crear bloqueo de 10 minutos'})).toHaveCount(0);
-    await page.getByText('Resultado comprobado').scrollIntoViewIfNeeded();
+    await expect(page.getByRole('button',{name:/^Reservar ·/})).toHaveCount(0);
+    await page.getByText(/Total.*95.000/).first().scrollIntoViewIfNeeded();
     await page.screenshot({path:info.outputPath('remote-hold.png'),fullPage:true});
-    await page.reload();
+    await page.goto('/remote-reservations');
+    await page.getByRole('button',{name:'Ver detalle'}).click();
     await expect(page.getByRole('button',{name:'Cancelar bloqueo'})).toBeVisible();
     await page.getByRole('button',{name:'Cancelar bloqueo'}).click();
+    await page.getByRole('button',{name:'Historial'}).click();
     await expect(page.getByText('Cancelada',{exact:true}).first()).toBeVisible();
     expect(calls.creates()).toBe(1);expect(calls.cancels()).toBe(1);
   });
   test('muestra la última decisión en la tarjeta al actualizar',async({page})=>{
     const api=await fixture(page);
-    await page.getByRole('button',{name:'Crear bloqueo de 10 minutos'}).click();
+    await page.getByRole('button',{name:/^Reservar ·/}).click();
+    await page.getByRole('button',{name:'Ver detalle'}).click();
     await expect(page.getByRole('button',{name:'Cancelar bloqueo'})).toBeVisible();
     for(const [status,label] of [['approved','Cambio aprobado'],['rejected','Cambio rechazado']] as const) {
       api.decide(status);
-      await page.getByRole('button',{name:'Actualizar mis bloqueos'}).click();
+      await page.goto('/remote-reservations');
+      await page.getByRole('button',{name:'Ver detalle'}).click();
       await expect(page.getByText('Última decisión: '+label,{exact:true})).toBeVisible();
     }
   });
   test('recupera respuesta perdida tras recargar sin segunda creación',async({page})=>{
     const calls=await fixture(page,{lostCreate:true});
-    await page.getByRole('button',{name:'Crear bloqueo de 10 minutos'}).click();
+    await page.getByRole('button',{name:/^Reservar ·/}).click();
     await expect(page.getByRole('alert')).toContainText('No pudimos comprobar');
     await page.reload();
     await page.getByRole('button',{name:'Comprobar o reintentar solicitud'}).click();
-    await expect(page.getByText(/Total final del servidor:/)).toBeVisible();
+    await expect(page.getByText(/Total/)).toBeVisible();
     expect(calls.creates()).toBe(1);
   });
   test('conflicto no se muestra como reserva y permite elegir otro horario',async({page})=>{
     await fixture(page,{conflict:true});
-    await page.getByRole('button',{name:'Crear bloqueo de 10 minutos'}).click();
+    await page.getByRole('button',{name:/^Reservar ·/}).click();
     await expect(page.getByRole('alert')).toContainText('Otro jugador ocupó');
     await expect(page.getByText('Resultado comprobado')).toHaveCount(0);
     await expect(page.getByRole('button',{name:'Comprobar o reintentar solicitud'})).toHaveCount(0);
   });
   test('cancelación con respuesta perdida se recupera al consultar',async({page})=>{
     const calls=await fixture(page,{lostCancel:true});
-    await page.getByRole('button',{name:'Crear bloqueo de 10 minutos'}).click();
+    await page.getByRole('button',{name:/^Reservar ·/}).click();
+    await page.getByRole('button',{name:'Ver detalle'}).click();
     await page.getByRole('button',{name:'Cancelar bloqueo'}).click();
+    await page.getByRole('button',{name:'Historial'}).click();
     await expect(page.getByText('Cancelada',{exact:true})).toBeVisible();
     await expect(page.getByRole('button',{name:'Cancelar bloqueo'})).toHaveCount(0);
     expect(calls.cancels()).toBe(1);
   });
   test('plazo agotado nunca se presenta como bloqueo vigente',async({page})=>{
     await fixture(page,{expired:true});
-    await page.getByRole('button',{name:'Crear bloqueo de 10 minutos'}).click();
+    await page.getByRole('button',{name:/^Reservar ·/}).click();
     await expect(page.getByText(/Plazo agotado/).first()).toBeVisible();
+    await page.getByRole('button',{name:'Historial'}).click();
+    await page.getByRole('button',{name:'Ver detalle'}).click();
     await expect(page.getByRole('button',{name:'Cancelar bloqueo'})).toBeDisabled();
   });
   test('al cerrar sesión desaparecen los datos conectados',async({page})=>{
     await fixture(page);
-    await page.getByRole('button',{name:'Crear bloqueo de 10 minutos'}).click();
-    await expect(page.getByText(/Total final del servidor:/)).toBeVisible();
+    await page.getByRole('button',{name:/^Reservar ·/}).click();
+    await expect(page.getByText(/Total/)).toBeVisible();
     await page.goto('/profile');await page.getByRole('button',{name:'Cerrar sesión',exact:true}).click();
+    await page.getByRole('button',{name:/Confirmar cierre/}).click();
     await page.goto('/remote-reservations');
     await expect(page.getByText('Inicia sesión para continuar')).toBeVisible();
     await expect(page.getByText('Equipo conectado')).toHaveCount(0);
