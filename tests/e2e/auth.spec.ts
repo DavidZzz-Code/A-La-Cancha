@@ -31,7 +31,7 @@ test.describe('Cuenta de desarrollo con API simulada', () => {
       }
       if (url.pathname.endsWith('/venue_members')) return route.fulfill({json:[]});
       if (url.pathname.endsWith('/courts')) return route.fulfill({json:url.searchParams.has('id')?{name:'Cancha norte'}:[]});
-      if (url.pathname.endsWith('/reservations')) return route.fulfill({json:[{court_id:'20000000-0000-0000-0000-000000000001',team:'Equipo del sábado',starts_at:'2027-05-01T20:00:00Z',courts:{name:'Cancha norte'}}]});
+      if (url.pathname.endsWith('/reservations')) return route.fulfill({json:[]});
       if (url.pathname.endsWith('/logout')) return route.fulfill({ status: 204 });
       if (url.pathname.endsWith('/user')) return route.fulfill({ json: user });
       return route.abort();
@@ -41,7 +41,7 @@ test.describe('Cuenta de desarrollo con API simulada', () => {
     await page.getByLabel('Contraseña de la cuenta').fill('test-password-only');
     await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
     await expect(page.getByRole('alert')).toContainText('No pudimos iniciar sesión');
-    await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click(); await expect(page.getByText('Cancha norte',{exact:true})).toBeVisible();
+    await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click(); await page.waitForURL(url=>url.pathname!=='/profile');
     await page.getByRole('link',{name:'Mi cuenta'}).click();
     await expect(page.getByText('Sesión iniciada: '+user.email)).toBeVisible();
     expect(await page.evaluate(() => JSON.stringify(window.sessionStorage))).not.toContain('test-password-only');

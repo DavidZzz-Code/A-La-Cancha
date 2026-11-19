@@ -53,11 +53,12 @@ async function fixture(page: Page, options: { pending?: boolean; confirm?: boole
       return respond(revoked || options.noAccess ? [] : [{ venue_id: venue, user_id: actor }]);
     }
     if (url.pathname.endsWith('/courts')) {
+      if(options.noAccess){expect(url.searchParams.has('venue_id')).toBe(false);return respond([]);}
       expect(url.searchParams.get('venue_id')).toBe('in.('+venue+')');
       return respond([court, second].map((id,i) => ({ id, venue_id: venue, name: 'Cancha '+(i+1), open_minute:420, close_minute:600, published:i===0, venues:{ name:'Sede DEMO', published:true } })));
     }
     if (url.pathname.endsWith('/reservations')) {
-      if(url.searchParams.get('court_id')?.startsWith('in.'))return respond([]);
+      if(url.searchParams.get('court_id')?.startsWith('in.')||url.searchParams.has('actor_id'))return respond([]);
       reads++;
       expect(url.searchParams.get('select')).not.toMatch(/actor_id|idempotency_key/);
       expect(url.searchParams.get('ends_at')).toMatch(/^gt\.\d{4}-\d\d-\d\dT05:00:00.000Z$/);

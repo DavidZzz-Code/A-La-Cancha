@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-const court={id:'20000000-0000-0000-0000-000000000001',name:'Cancha conectada de prueba',capacity:10,open_minute:420,close_minute:600,venues:{name:'Sede de prueba',city:'Cartagena',published:true}};
+const court={id:'20000000-0000-0000-0000-000000000001',name:'Cancha conectada de prueba',capacity:10,hourly_price:100000,open_minute:420,close_minute:600,venues:{name:'Sede de prueba',city:'Cartagena',published:true}};
 test.describe('Agenda remota con API simulada',()=>{
   test.skip(process.env.AUTH_E2E!=='1','Requiere configuración de prueba.');
   test('consulta ocupación y precio de servidor sin crear reserva',async({page},testInfo)=>{
@@ -29,7 +29,7 @@ test.describe('Agenda remota con API simulada',()=>{
     await expect(page.getByText('El Patio',{exact:true})).toHaveCount(0);
   });
   test('fallo de ocupación no presenta horarios libres',async({page})=>{
-    await page.route('https://auth-test.supabase.co/**',route=>route.request().url().includes('/courts?')?route.fulfill({json:[court]}):route.fulfill({status:503,json:{message:'unavailable'}}));
+    await page.route('https://auth-test.supabase.co/**',route=>route.request().url().includes('/occupied_slots')?route.fulfill({status:503,json:{message:'unavailable'}}):route.fulfill({json:route.request().url().includes('/courts?')?[court]:[]}));
     await page.goto('/remote-agenda');await page.getByRole('button',{name:/Sede de prueba/}).click();
     await expect(page.getByRole('alert')).toContainText('No asumiremos que están libres');
     await expect(page.getByRole('button',{name:/8:00\s*a/})).toHaveCount(0);
