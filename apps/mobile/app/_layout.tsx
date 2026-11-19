@@ -10,7 +10,8 @@ import { Provider } from '../src/lib/context';
 export default function Layout() { const [loaded,error] = useFonts({Manrope_400Regular,Manrope_500Medium,Manrope_700Bold,SpaceGrotesk_700Bold}); if (!loaded && !error) return <ActivityIndicator accessibilityLabel="Cargando tipografía"/>; return <SafeAreaProvider><ThemeProvider><Provider><AuthProvider><CourtFavoritesProvider><Routes/></CourtFavoritesProvider></AuthProvider></Provider></ThemeProvider></SafeAreaProvider>; }
 
 function Routes(){
- const {role,session}=useAuth();
+ const {role,session,loading}=useAuth();
+ if(loading||(session&&role==='loading'))return <ActivityIndicator accessibilityLabel="Cargando sesión"/>;
  return <Stack screenOptions={{headerShown:false,animation:'slide_from_right'}}>
  <Stack.Screen name="index"/><Stack.Screen name="profile"/>
  <Stack.Protected guard={!!session&&role==='owner'}>{['owner-home','owner-courts','owner-metrics','owner-agenda','owner-maintenance'].map(name=><Stack.Screen key={name} name={name}/>)}</Stack.Protected>

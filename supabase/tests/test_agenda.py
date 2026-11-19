@@ -96,11 +96,12 @@ class AgendaTests(unittest.TestCase):
 
     def test_02_server_price_idempotency_and_events(self):
         key = str(uuid.uuid4())
-        first = json.loads(create(2,duration=90,key=key))
-        self.assertEqual(first['total'],150002)
+        self.assertIn('player_reservations_require_one_hour', create(2,duration=90,key=key,ok=False))
+        first = json.loads(create(2,key=key))
+        self.assertEqual(first['total'],100001)
         self.assertEqual(first['status'],'held')
-        self.assertEqual(first['id'],json.loads(create(2,duration=90,key=key))['id'])
-        self.assertIn('idempotency_mismatch',create(2,duration=60,key=key,ok=False))
+        self.assertEqual(first['id'],json.loads(create(2,key=key))['id'])
+        self.assertIn('idempotency_mismatch',create(2,time='20:00',key=key,ok=False))
         self.assertEqual(sql(f"select count(*) from public.reservation_events where reservation_id='{first['id']}';",actor=PLAYER),'1')
         self.assertEqual(sql(f"select count(*) from public.reservations where id='{first['id']}';",actor=OTHER),'0')
         self.assertEqual(sql(f"select count(*) from public.reservation_events where reservation_id='{first['id']}';",actor=OTHER),'0')

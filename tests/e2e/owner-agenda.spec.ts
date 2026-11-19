@@ -57,6 +57,7 @@ async function fixture(page: Page, options: { pending?: boolean; confirm?: boole
       return respond([court, second].map((id,i) => ({ id, venue_id: venue, name: 'Cancha '+(i+1), open_minute:420, close_minute:600, published:i===0, venues:{ name:'Sede DEMO', published:true } })));
     }
     if (url.pathname.endsWith('/reservations')) {
+      if(url.searchParams.get('court_id')?.startsWith('in.'))return respond([]);
       reads++;
       expect(url.searchParams.get('select')).not.toMatch(/actor_id|idempotency_key/);
       expect(url.searchParams.get('ends_at')).toMatch(/^gt\.\d{4}-\d\d-\d\dT05:00:00.000Z$/);
@@ -83,7 +84,8 @@ async function fixture(page: Page, options: { pending?: boolean; confirm?: boole
     await page.waitForURL(url=>url.pathname!=='/profile');
     await page.goto('/owner-agenda');
   } else {
-    await expect(page).toHaveURL(/owner-agenda/);
+    await expect(page).toHaveURL(/owner-home/);
+    await page.goto('/owner-agenda');
   }
   return { revoke: () => { revoked=true; }, reads: () => reads, writes: () => writes };
 }
@@ -107,15 +109,15 @@ test.describe('Agenda del propietario con API simulada', () => {
   });
   test('consulta por cancha y fecha, distingue estados sin realizar escrituras', async ({page}, info) => {
     const api = await fixture(page);
-    await expect(page.getByText('07:00 · Ocupado',{exact:true})).toBeVisible();
+    await expect(page.getByText('Apartado',{exact:true}).first()).toBeVisible();
     await expect(page.getByText('Reserva de la app · Bloqueo temporal · sin confirmar',{exact:true})).toBeVisible();
     await expect(page.getByText('Registro manual · Cancelada',{exact:true})).toBeVisible();
     await expect(page.getByText('Bloqueo del establecimiento · Confirmada',{exact:true})).toBeVisible();
     await expect(page.getByText(/Plazo agotado; pendiente/)).toBeVisible();
     await page.getByRole('button',{name:'Mañana',exact:true}).click();
-    await expect(page.getByText('08:00 · Libre al consultar',{exact:true})).toBeVisible();
+    await expect(page.getByText('Disponible',{exact:true}).first()).toBeVisible();
     await page.screenshot({path:info.outputPath('owner-agenda.png'),fullPage:true});
-    await page.getByRole('button',{name:'Sede DEMO · Cancha 2',exact:true}).click();
+    await page.getByRole('button',{name:'Cancha 2',exact:true}).click();
     await expect(page.getByText('No hay reservas registradas para esta cancha y fecha.')).toBeVisible();
     await expect(page.getByText(/No publicada para jugadores/)).toBeVisible();
     await expect(page.getByText(/Equipo de la app/)).toHaveCount(0);
@@ -123,7 +125,7 @@ test.describe('Agenda del propietario con API simulada', () => {
   });
   test('sin membresías no consulta reservas ni inventa un establecimiento', async ({page}) => {
     const api=await fixture(page,{noAccess:true});
-    await expect(page.getByText('Sin canchas asignadas',{exact:true})).toBeVisible();
+    await expect(page).not.toHaveURL(/owner-agenda/);
     expect(api.reads()).toBe(0);
     await expect(page.getByRole('button',{name:'Registrar turno presencial'})).toHaveCount(0);
   });
@@ -145,7 +147,7 @@ test.describe('Agenda del propietario con API simulada', () => {
       await page.getByRole('button',{name:'Comprobar turno presencial'}).click();
       await expect(page.getByRole('button',{name:'Registrar turno presencial'})).toBeVisible();
       await expect(page.getByText('Registro manual · Confirmada')).toHaveCount(1);
-      await expect(page.getByText('08:00 · Ocupado',{exact:true})).toBeVisible();
+      await expect(page.getByText('Reservada',{exact:true}).first()).toBeVisible();
       expect(api.writes()).toBe(2);
     }
   });
@@ -159,14 +161,15 @@ test.describe('Agenda del propietario con API simulada', () => {
     const api=await fixture(page);
     await expect(page.getByText(/Equipo de la app/)).toBeVisible();
     api.revoke();
-    await page.getByRole('button',{name:'Actualizar agenda del establecimiento'}).click();
+    await page.getByRole('button',{name:'Actualizar agenda'}).click();
     await expect(page.getByText('Sin canchas asignadas',{exact:true})).toBeVisible();
     await expect(page.getByText(/Equipo de la app/)).toHaveCount(0);
     await page.goto('/profile');
     await page.getByRole('button',{name:'Cerrar sesión',exact:true}).click();
+    await page.getByRole('button',{name:/Confirmar cierre/}).click();
     await expect(page.getByRole('button',{name:'Iniciar sesión',exact:true})).toBeVisible();
     await page.goto('/owner-agenda');
-    await expect(page.getByRole('button',{name:'Ir a mi cuenta'})).toBeVisible();
+    await expect(page.getByRole('button',{name:'Iniciar sesión',exact:true})).toBeVisible();
     await expect(page.getByText(/Equipo de la app/)).toHaveCount(0);
   });
 });

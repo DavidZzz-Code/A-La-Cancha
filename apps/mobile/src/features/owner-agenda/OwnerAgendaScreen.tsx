@@ -11,6 +11,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { supabase } from '../auth/client';
 import { fetchManagedCourts, fetchOwnerDay } from './api';
 import { CancelExternalBooking } from './CancelExternalBooking';
+import { ConfirmPlayerHold } from "./ConfirmPlayerHold";
 import { ReceiptAction } from './ReceiptAction';
 import { ExternalBooking } from './ExternalBooking';
 import { colombiaTime, dailySlots, kindLabels, statusLabels, type AgendaEntry, type ManagedCourt } from './contracts';
@@ -81,6 +82,7 @@ function OwnerPanel({ actor }: { actor: string }) { const {colors:themeColors}=u
             {row.kind !== 'block' && <Label>{row.players} jugadores</Label>}
             {row.kind==='player' && row.status==='confirmed' && <Reschedule row={row} owner onMoved={()=>setRefresh(n=>n+1)}/>}
             <ReceiptAction row={row} onSaved={() => setRefresh(v => v + 1)}/>
+            <ConfirmPlayerHold actor={actor} row={row} checkedAt={agenda.at} onSaved={() => setRefresh(v => v + 1)}/>
             <CancelExternalBooking actor={actor} row={row} checkedAt={agenda.at} onSaved={() => setRefresh(v => v + 1)}/>
             {row.status === 'held' && <Label>{Date.parse(row.expires_at!) <= agenda.at ? 'Plazo agotado; pendiente de actualización del servidor. El intervalo sigue marcado como ocupado.' : `Vence a las ${colombiaTime(row.expires_at!)}. Todavía no es una reserva confirmada.`}</Label>}
           </View>)}

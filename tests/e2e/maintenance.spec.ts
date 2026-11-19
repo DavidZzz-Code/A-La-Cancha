@@ -11,9 +11,10 @@ async function fixture(page:Page, options:{lostCreate?:boolean;lostCancel?:boole
     const single=route.request().headers().accept?.includes('vnd.pgrst.object');
     const respond=(rows:unknown[])=>route.fulfill({json:single?(rows[0]??null):rows,headers:{'content-range':`${rows.length?'0-'+(rows.length-1):'*'}/${rows.length}`,'access-control-expose-headers':'content-range'}});
     if(url.pathname.endsWith('/token'))return route.fulfill({json:{user,access_token:token,refresh_token:'fixture',expires_in:3600,token_type:'bearer'}});
-    if(url.pathname.endsWith('/venue_members'))return respond(options.denied?[]:[{venue_id:venue,user_id:actor}]);
+    if(url.pathname.endsWith('/venue_members'))return respond(options.denied&&url.searchParams.get('limit')!=='1'?[]:[{venue_id:venue,user_id:actor}]);
     if(url.pathname.endsWith('/courts'))return respond([{id:court,venue_id:venue,name:'Cancha mantenimiento',open_minute:420,close_minute:660,published:true,venues:{name:'DEMO',published:true}}]);
     if(url.pathname.endsWith('/reservations')) {
+      if(url.searchParams.get('court_id')?.startsWith('in.'))return respond([]);
       if(url.searchParams.has('idempotency_key')) {
         expect(url.searchParams.get('actor_id')).toBe('eq.'+actor);
         return respond(row&&url.searchParams.get('idempotency_key')==='eq.'+row.idempotency_key?[row]:[]);

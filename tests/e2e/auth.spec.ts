@@ -30,7 +30,8 @@ test.describe('Cuenta de desarrollo con API simulada', () => {
         return route.fulfill({ json: { access_token: token, refresh_token: 'test-refresh-token', token_type: 'bearer', expires_in: 3600, user } });
       }
       if (url.pathname.endsWith('/venue_members')) return route.fulfill({json:[]});
-      if (url.pathname.endsWith('/reservations')) return route.fulfill({json:[{team:'Equipo del sábado',starts_at:'2027-05-01T20:00:00Z',courts:{name:'Cancha norte'}}]});
+      if (url.pathname.endsWith('/courts')) return route.fulfill({json:url.searchParams.has('id')?{name:'Cancha norte'}:[]});
+      if (url.pathname.endsWith('/reservations')) return route.fulfill({json:[{court_id:'20000000-0000-0000-0000-000000000001',team:'Equipo del sábado',starts_at:'2027-05-01T20:00:00Z',courts:{name:'Cancha norte'}}]});
       if (url.pathname.endsWith('/logout')) return route.fulfill({ status: 204 });
       if (url.pathname.endsWith('/user')) return route.fulfill({ json: user });
       return route.abort();
@@ -40,13 +41,14 @@ test.describe('Cuenta de desarrollo con API simulada', () => {
     await page.getByLabel('Contraseña de la cuenta').fill('test-password-only');
     await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
     await expect(page.getByRole('alert')).toContainText('No pudimos iniciar sesión');
-    await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click(); await expect(page.getByText('Equipo del sábado · Cancha norte')).toBeVisible();
+    await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click(); await expect(page.getByText('Cancha norte',{exact:true})).toBeVisible();
     await page.getByRole('link',{name:'Mi cuenta'}).click();
     await expect(page.getByText('Sesión iniciada: '+user.email)).toBeVisible();
     expect(await page.evaluate(() => JSON.stringify(window.sessionStorage))).not.toContain('test-password-only');
     await page.reload();
     await expect(page.getByText('Sesión iniciada: '+user.email)).toBeVisible();
     await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
+    await page.getByRole('button',{name:/Confirmar cierre/}).click();
     await expect(page.getByRole('button', { name: 'Iniciar sesión', exact: true })).toBeVisible();
     await expect(page.getByLabel('Contraseña de la cuenta')).toHaveValue('');
     await page.reload();
@@ -75,6 +77,7 @@ test('eventos entre pestañas no sustituyen la sesión almacenada', async ({ con
       const access_token = encode({alg:'HS256',typ:'JWT'})+'.'+encode({sub:user.id,exp:Math.floor(Date.now()/1000)+3600})+'.fixture';
       return route.fulfill({json:{user,access_token,refresh_token:'fixture-'+user.id,expires_in:3600,token_type:'bearer'}});
     }
+    if (route.request().url().includes('/venue_members')) return route.fulfill({json:[]});
     if (route.request().url().includes('/logout')) return route.fulfill({status:204});
     return route.abort();
   });
@@ -89,6 +92,7 @@ test('eventos entre pestañas no sustituyen la sesión almacenada', async ({ con
   await page.reload();
   await expect(page.getByText('Sesión iniciada: a@example.test')).toBeVisible();
   await other.getByRole('button',{name:'Cerrar sesión',exact:true}).click();
+    await other.getByRole('button',{name:/Confirmar cierre/}).click();
   await expect(other.getByRole('button',{name:'Iniciar sesión',exact:true})).toBeVisible();
   await expect(page.getByText('Sesión iniciada: a@example.test')).toBeVisible();
   await page.reload();
